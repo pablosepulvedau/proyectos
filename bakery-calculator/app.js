@@ -143,10 +143,10 @@ auth.onAuthStateChanged(async user => {
     if (!data.name    && currentUser.name)    patch.name    = currentUser.name;
     if (!data.email   && currentUser.email)   patch.email   = currentUser.email;
     if (!data.picture && currentUser.picture) patch.picture = currentUser.picture;
-    docRef.update(patch).catch(() => {});
+    docRef.update(patch).catch(err => console.warn('Patch usuario:', err.message));
 
-    // Cargar app (todos los usuarios activos acceden directamente)
-    showApp(data);
+    // Cargar app con datos fusionados (para reflejar el parche de inmediato)
+    showApp({ ...data, ...patch });
   } catch (err) {
     console.error('Error en auth state:', err);
     hideAllOverlays();
@@ -233,8 +233,8 @@ document.getElementById('form-perfil').addEventListener('submit', async e => {
     }
 
     // Verificar invitación previa del administrador
-    const emailKey  = currentUser.email.toLowerCase();
-    const inviteRef = db.collection('pending_invites').doc(emailKey);
+    const emailKey  = (currentUser.email || '').toLowerCase();
+    const inviteRef = db.collection('pending_invites').doc(emailKey || '_sin_email');
     const inviteDoc = await inviteRef.get();
     // Verificar si el admin pre-asignó un plan
     let plan = 'free';
