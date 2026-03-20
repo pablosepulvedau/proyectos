@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora de Costos de Pastelería</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>🎂 Calculadora de Costos de Pastelería</h1>
+    <p class="subtitle">Gestiona ingredientes, recetas y calcula el precio de venta ideal</p>
+  </header>
+
+  <main>
+    <!-- TABS -->
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="ingredientes">Ingredientes</button>
+      <button class="tab-btn" data-tab="recetas">Recetas</button>
+      <button class="tab-btn" data-tab="calculo">Cálculo de Costos</button>
+    </nav>
+
+    <!-- TAB: INGREDIENTES -->
+    <section id="tab-ingredientes" class="tab-content active">
+      <div class="card">
+        <h2>Gestión de Ingredientes</h2>
+        <form id="form-ingrediente">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nombre del ingrediente</label>
+              <input type="text" id="ing-nombre" placeholder="Ej: Harina" required />
+            </div>
+            <div class="form-group">
+              <label>Unidad de medida</label>
+              <select id="ing-unidad">
+                <option value="kg">kg</option>
+                <option value="g">g</option>
+                <option value="L">L</option>
+                <option value="ml">ml</option>
+                <option value="unidad">unidad</option>
+                <option value="docena">docena</option>
+                <option value="taza">taza</option>
+                <option value="cdta">cdta</option>
+                <option value="cda">cda</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Costo por unidad ($)</label>
+              <input type="number" id="ing-costo" placeholder="0.00" step="0.01" min="0" required />
+            </div>
+            <div class="form-group form-group--action">
+              <button type="submit" class="btn btn-primary">Agregar</button>
+            </div>
+          </div>
+        </form>
+
+        <div class="search-bar">
+          <input type="text" id="buscar-ingrediente" placeholder="Buscar ingrediente..." />
+        </div>
+
+        <table id="tabla-ingredientes">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nombre</th>
+              <th>Unidad</th>
+              <th>Costo/Unidad</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-ingredientes">
+            <tr class="empty-row"><td colspan="5">No hay ingredientes registrados</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB: RECETAS -->
+    <section id="tab-recetas" class="tab-content">
+      <div class="card">
+        <h2>Gestión de Recetas</h2>
+        <form id="form-receta">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nombre de la receta</label>
+              <input type="text" id="rec-nombre" placeholder="Ej: Torta de Chocolate" required />
+            </div>
+            <div class="form-group">
+              <label>Unidades por lote</label>
+              <input type="number" id="rec-unidades" placeholder="Ej: 12" min="1" required />
+            </div>
+            <div class="form-group form-group--action">
+              <button type="submit" class="btn btn-primary">Crear Receta</button>
+            </div>
+          </div>
+        </form>
+
+        <div id="recetas-lista" class="recetas-grid"></div>
+      </div>
+    </section>
+
+    <!-- TAB: CÁLCULO -->
+    <section id="tab-calculo" class="tab-content">
+      <div class="card">
+        <h2>Cálculo de Costos</h2>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Seleccionar receta</label>
+            <select id="calc-receta">
+              <option value="">-- Seleccione una receta --</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="calculo-detalle" class="hidden">
+          <div class="costos-grid">
+            <!-- Costos ingredientes -->
+            <div class="costo-card">
+              <h3>Ingredientes</h3>
+              <table id="tabla-ingredientes-receta">
+                <thead>
+                  <tr><th>Ingrediente</th><th>Cantidad</th><th>Unidad</th><th>Subtotal</th></tr>
+                </thead>
+                <tbody id="tbody-ing-receta"></tbody>
+                <tfoot>
+                  <tr><td colspan="3"><strong>Total ingredientes</strong></td><td id="total-ingredientes">$0.00</td></tr>
+                </tfoot>
+              </table>
+            </div>
+
+            <!-- Costos adicionales -->
+            <div class="costo-card">
+              <h3>Costos Adicionales</h3>
+              <div class="adicionales-form">
+                <div class="adicional-item">
+                  <label>Mano de obra ($/lote)</label>
+                  <input type="number" id="costo-mano-obra" value="0" min="0" step="0.01" />
+                </div>
+                <div class="adicional-item">
+                  <label>Gas / Energía ($/lote)</label>
+                  <input type="number" id="costo-energia" value="0" min="0" step="0.01" />
+                </div>
+                <div class="adicional-item">
+                  <label>Empaque ($/unidad)</label>
+                  <input type="number" id="costo-empaque" value="0" min="0" step="0.01" />
+                </div>
+                <div class="adicional-item">
+                  <label>Otros costos ($/lote)</label>
+                  <input type="number" id="costo-otros" value="0" min="0" step="0.01" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Margen y resultado -->
+          <div class="resultado-card">
+            <h3>Precio de Venta</h3>
+            <div class="margen-row">
+              <label>Margen de ganancia (%)</label>
+              <input type="range" id="margen-ganancia" min="0" max="200" value="30" />
+              <span id="margen-valor">30%</span>
+            </div>
+
+            <div class="resumen-costos">
+              <div class="resumen-item">
+                <span>Costo total del lote</span>
+                <strong id="res-costo-lote">$0.00</strong>
+              </div>
+              <div class="resumen-item">
+                <span>Unidades por lote</span>
+                <strong id="res-unidades">0</strong>
+              </div>
+              <div class="resumen-item">
+                <span>Costo por unidad</span>
+                <strong id="res-costo-unidad">$0.00</strong>
+              </div>
+              <div class="resumen-item highlight">
+                <span>Precio de venta sugerido</span>
+                <strong id="res-precio-venta">$0.00</strong>
+              </div>
+              <div class="resumen-item">
+                <span>Ganancia por unidad</span>
+                <strong id="res-ganancia">$0.00</strong>
+              </div>
+              <div class="resumen-item">
+                <span>Ganancia total del lote</span>
+                <strong id="res-ganancia-lote">$0.00</strong>
+              </div>
+            </div>
+
+            <button class="btn btn-secondary" id="btn-imprimir">Imprimir / Exportar</button>
+          </div>
+        </div>
+
+        <div id="calculo-vacio" class="empty-state">
+          <p>Selecciona una receta para calcular sus costos</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL: Editar ingrediente -->
+  <div id="modal-ingrediente" class="modal hidden">
+    <div class="modal-content">
+      <h3>Editar Ingrediente</h3>
+      <div class="form-group">
+        <label>Nombre</label>
+        <input type="text" id="edit-ing-nombre" />
+      </div>
+      <div class="form-group">
+        <label>Unidad</label>
+        <select id="edit-ing-unidad">
+          <option value="kg">kg</option>
+          <option value="g">g</option>
+          <option value="L">L</option>
+          <option value="ml">ml</option>
+          <option value="unidad">unidad</option>
+          <option value="docena">docena</option>
+          <option value="taza">taza</option>
+          <option value="cdta">cdta</option>
+          <option value="cda">cda</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Costo/Unidad ($)</label>
+        <input type="number" id="edit-ing-costo" step="0.01" min="0" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="btn-guardar-ing">Guardar</button>
+        <button class="btn btn-ghost" id="btn-cancelar-ing">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Agregar ingrediente a receta -->
+  <div id="modal-receta-ing" class="modal hidden">
+    <div class="modal-content">
+      <h3 id="modal-receta-titulo">Agregar ingrediente a receta</h3>
+      <div class="form-group">
+        <label>Ingrediente</label>
+        <select id="rec-ing-select"></select>
+      </div>
+      <div class="form-group">
+        <label>Cantidad</label>
+        <input type="number" id="rec-ing-cantidad" step="0.001" min="0" placeholder="0.00" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="btn-agregar-rec-ing">Agregar</button>
+        <button class="btn btn-ghost" id="btn-cancelar-rec-ing">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-overlay" class="modal-overlay hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

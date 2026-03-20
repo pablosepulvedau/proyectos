@@ -1,0 +1,306 @@
+/* =========================================
+   BAKERY COST CALCULATOR - STYLES
+   ========================================= */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --primary:    #c0392b;
+  --primary-dk: #96281b;
+  --accent:     #e67e22;
+  --bg:         #fdf6f0;
+  --surface:    #ffffff;
+  --border:     #e8d5c4;
+  --text:       #2c1810;
+  --text-muted: #7f6357;
+  --success:    #27ae60;
+  --danger:     #e74c3c;
+  --shadow:     0 2px 8px rgba(44, 24, 16, .10);
+  --radius:     10px;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* HEADER */
+header {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  color: #fff;
+  text-align: center;
+  padding: 2rem 1rem 1.5rem;
+}
+header h1 { font-size: clamp(1.4rem, 4vw, 2rem); font-weight: 700; }
+header .subtitle { margin-top: .4rem; opacity: .85; font-size: .95rem; }
+
+/* MAIN */
+main { max-width: 960px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+
+/* TABS */
+.tabs {
+  display: flex;
+  gap: .5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 0;
+}
+.tab-btn {
+  background: none;
+  border: none;
+  padding: .7rem 1.4rem;
+  font-size: .95rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--radius) var(--radius) 0 0;
+  transition: all .2s;
+  position: relative;
+  bottom: -2px;
+}
+.tab-btn:hover { color: var(--primary); background: var(--border); }
+.tab-btn.active {
+  color: var(--primary);
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-bottom-color: var(--surface);
+}
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* CARD */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+}
+.card h2 {
+  font-size: 1.2rem;
+  color: var(--primary);
+  margin-bottom: 1.2rem;
+  padding-bottom: .6rem;
+  border-bottom: 1px solid var(--border);
+}
+
+/* FORMS */
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+  align-items: flex-end;
+  margin-bottom: 1.2rem;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+  flex: 1 1 160px;
+}
+.form-group--action { flex: 0 0 auto; }
+.form-group label { font-size: .85rem; font-weight: 600; color: var(--text-muted); }
+
+input[type="text"],
+input[type="number"],
+select {
+  padding: .55rem .75rem;
+  border: 1.5px solid var(--border);
+  border-radius: 7px;
+  font-size: .95rem;
+  background: var(--bg);
+  color: var(--text);
+  transition: border-color .2s;
+  width: 100%;
+}
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: #fff;
+}
+
+/* BUTTONS */
+.btn {
+  padding: .6rem 1.2rem;
+  border: none;
+  border-radius: 7px;
+  font-size: .9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+  white-space: nowrap;
+}
+.btn-primary  { background: var(--primary); color: #fff; }
+.btn-primary:hover  { background: var(--primary-dk); }
+.btn-secondary { background: var(--accent); color: #fff; }
+.btn-secondary:hover { filter: brightness(.9); }
+.btn-ghost { background: transparent; color: var(--text-muted); border: 1.5px solid var(--border); }
+.btn-ghost:hover { background: var(--bg); }
+.btn-danger { background: var(--danger); color: #fff; font-size: .8rem; padding: .3rem .7rem; }
+.btn-danger:hover { filter: brightness(.85); }
+.btn-edit { background: #3498db; color: #fff; font-size: .8rem; padding: .3rem .7rem; border-radius: 5px; border: none; cursor: pointer; }
+.btn-edit:hover { filter: brightness(.85); }
+.btn-sm { font-size: .8rem; padding: .35rem .8rem; }
+
+/* SEARCH */
+.search-bar { margin-bottom: .8rem; }
+.search-bar input { max-width: 300px; }
+
+/* TABLES */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .9rem;
+}
+th, td {
+  padding: .65rem .8rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+th { background: var(--bg); font-weight: 700; color: var(--text-muted); font-size: .8rem; text-transform: uppercase; }
+tbody tr:hover { background: #fdf0e8; }
+tfoot td { font-weight: 700; background: var(--bg); }
+.empty-row td { text-align: center; color: var(--text-muted); padding: 2rem; font-style: italic; }
+
+/* RECETAS GRID */
+.recetas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-top: .5rem;
+}
+.receta-card {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  background: var(--bg);
+}
+.receta-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: .8rem;
+}
+.receta-card-header h4 { font-size: 1rem; color: var(--text); }
+.receta-card-header .lote-info { font-size: .8rem; color: var(--text-muted); }
+.receta-ing-list { list-style: none; font-size: .85rem; margin-bottom: .8rem; }
+.receta-ing-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: .25rem 0;
+  border-bottom: 1px dashed var(--border);
+}
+.receta-ing-list li:last-child { border-bottom: none; }
+.receta-card-actions { display: flex; gap: .4rem; flex-wrap: wrap; }
+
+/* CALCULOS */
+.costos-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+@media (max-width: 640px) { .costos-grid { grid-template-columns: 1fr; } }
+
+.costo-card {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+.costo-card h3 { font-size: .95rem; color: var(--primary); margin-bottom: .8rem; }
+
+.adicionales-form { display: flex; flex-direction: column; gap: .6rem; }
+.adicional-item { display: flex; justify-content: space-between; align-items: center; gap: .5rem; }
+.adicional-item label { font-size: .85rem; color: var(--text-muted); }
+.adicional-item input { width: 100px; text-align: right; }
+
+/* RESULTADO */
+.resultado-card {
+  background: linear-gradient(135deg, #fff8f5, #fff);
+  border: 2px solid var(--primary);
+  border-radius: var(--radius);
+  padding: 1.2rem;
+}
+.resultado-card h3 { color: var(--primary); margin-bottom: 1rem; }
+
+.margen-row {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.margen-row label { font-size: .9rem; font-weight: 600; }
+.margen-row input[type="range"] { flex: 1; min-width: 120px; accent-color: var(--primary); }
+.margen-row span { font-weight: 700; color: var(--primary); min-width: 3rem; }
+
+.resumen-costos { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 1.2rem; }
+.resumen-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: .5rem .75rem;
+  border-radius: 6px;
+  font-size: .9rem;
+}
+.resumen-item:nth-child(odd) { background: var(--bg); }
+.resumen-item.highlight {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+  border-radius: 8px;
+}
+.resumen-item.highlight strong { font-size: 1.1rem; }
+
+/* EMPTY STATE */
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+.hidden { display: none !important; }
+
+/* MODALS */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 100;
+}
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 101;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  min-width: 320px;
+  max-width: 480px;
+  width: 90%;
+  box-shadow: 0 10px 30px rgba(0,0,0,.2);
+}
+.modal h3 { color: var(--primary); margin-bottom: 1rem; }
+.modal .form-group { margin-bottom: .8rem; }
+.modal-actions { display: flex; gap: .6rem; justify-content: flex-end; margin-top: 1rem; }
+
+/* PRINT */
+@media print {
+  header, .tabs, .btn, .form-row, .search-bar, .modal, .modal-overlay { display: none !important; }
+  .tab-content { display: block !important; }
+  body, main { background: #fff; }
+  .card { box-shadow: none; border: 1px solid #ccc; }
+}
+
+/* RESPONSIVE */
+@media (max-width: 560px) {
+  .form-row { flex-direction: column; }
+  .form-group { flex: 1 1 100%; }
+  th, td { padding: .45rem .5rem; font-size: .8rem; }
+}
