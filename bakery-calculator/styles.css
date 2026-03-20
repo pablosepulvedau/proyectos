@@ -503,6 +503,39 @@ tfoot td { font-weight: 700; background: var(--bg); }
 .contacto-wa:hover { background: #1ebe57; }
 .contacto-nota { font-size: .82rem; color: var(--text-muted); margin-bottom: 0 !important; }
 
+/* BTN USUARIO (avatar + nombre en header) */
+.btn-usuario {
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: #fff;
+}
+.btn-usuario:hover { opacity: .85; }
+
+/* MODAL MI PERFIL — ancho un poco mayor */
+#modal-mi-perfil { max-width: 500px; max-height: 90vh; overflow-y: auto; }
+#modal-mi-perfil h3 { color: var(--primary); margin-bottom: 1rem; }
+#modal-mi-perfil .form-group { margin-bottom: .65rem; }
+#modal-mi-perfil label { font-size: .82rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: .2rem; }
+
+/* Status mensaje dentro del modal */
+.edit-perfil-status {
+  border-radius: 7px;
+  padding: .5rem .8rem;
+  font-size: .85rem;
+  margin-top: .5rem;
+}
+.edit-perfil-status.ok  { background: #e8f8ef; border: 1px solid var(--success); color: #1a7a40; }
+.edit-perfil-status.err { background: #fdecea; border: 1px solid var(--danger);  color: var(--danger); }
+.edit-perfil-status.hidden { display: none; }
+
+/* Scroll horizontal en tablas */
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
 /* PRINT */
 @media print {
   header, .tabs, .btn, .form-row, .search-bar, .modal, .modal-overlay { display: none !important; }
@@ -512,8 +545,36 @@ tfoot td { font-weight: 700; background: var(--bg); }
 }
 
 /* RESPONSIVE */
-@media (max-width: 560px) {
+@media (max-width: 600px) {
+  /* Header compacto */
+  header { padding: .8rem 1rem; }
+  header .subtitle { display: none; }
+  .header-main { gap: .5rem; }
+  #user-name { max-width: 90px; font-size: .8rem; }
+  #btn-signout { font-size: .75rem; padding: .2rem .5rem; }
+  #auth-section { padding: .3rem .6rem .3rem .3rem; gap: .45rem; }
+  #user-avatar { width: 30px; height: 30px; }
+
+  /* Tabs con scroll horizontal */
+  .tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; gap: 0; padding-bottom: 0; }
+  .tab-btn { padding: .6rem .9rem; font-size: .85rem; white-space: nowrap; flex-shrink: 0; }
+
+  /* Cards */
+  .card { padding: 1rem .85rem; }
+
+  /* Formularios */
   .form-row { flex-direction: column; }
   .form-group { flex: 1 1 100%; }
+  .perfil-row { flex-direction: column; gap: 0; }
+
+  /* Tablas */
   th, td { padding: .45rem .5rem; font-size: .8rem; }
+
+  /* Modal más cómodo */
+  .modal { width: 95%; padding: 1.2rem 1rem; max-height: 90vh; overflow-y: auto; }
+  #modal-mi-perfil { max-height: 85vh; }
+
+  /* Costos adicionales */
+  .adicional-item { flex-direction: column; align-items: flex-start; gap: .25rem; }
+  .adicional-item input { width: 100%; text-align: left; }
 }

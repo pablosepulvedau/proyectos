@@ -324,6 +324,89 @@ document.getElementById('form-perfil').addEventListener('submit', async e => {
   }
 });
 
+// ── MI PERFIL ───────────────────────────────
+document.getElementById('btn-mi-perfil').addEventListener('click', async () => {
+  if (!currentUser) return;
+  const doc = await db.collection('users').doc(currentUser.id).get().catch(() => null);
+  const data = doc?.data() || {};
+  document.getElementById('edit-perfil-nombre').value    = data.name    || currentUser.name  || '';
+  document.getElementById('edit-perfil-telefono').value  = data.phone   || '';
+  document.getElementById('edit-perfil-direccion').value = data.address || '';
+  document.getElementById('edit-perfil-comuna').value    = data.commune || '';
+  document.getElementById('edit-perfil-region').value    = data.region  || '';
+  document.getElementById('edit-perfil-pais').value      = data.country || 'Chile';
+  document.getElementById('edit-nueva-password').value   = '';
+  document.getElementById('edit-confirmar-password').value = '';
+  const statusEl = document.getElementById('edit-perfil-status');
+  statusEl.textContent = '';
+  statusEl.className = 'edit-perfil-status hidden';
+  const tienePassword = currentUser.providers.includes('password');
+  document.getElementById('edit-password-section').classList.toggle('hidden', !tienePassword);
+  abrirModal('modal-mi-perfil');
+});
+
+document.getElementById('btn-guardar-mi-perfil').addEventListener('click', async () => {
+  const btn      = document.getElementById('btn-guardar-mi-perfil');
+  const statusEl = document.getElementById('edit-perfil-status');
+  const nombre   = document.getElementById('edit-perfil-nombre').value.trim();
+
+  if (!nombre) {
+    statusEl.textContent = 'El nombre es obligatorio.';
+    statusEl.className = 'edit-perfil-status err';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+  statusEl.className = 'edit-perfil-status hidden';
+
+  try {
+    // Contraseña primero (falla rápido si hay error)
+    const nuevaPass    = document.getElementById('edit-nueva-password').value;
+    const confirmaPass = document.getElementById('edit-confirmar-password').value;
+    if (nuevaPass) {
+      if (nuevaPass.length < 6)       throw new Error('La contraseña debe tener al menos 6 caracteres.');
+      if (nuevaPass !== confirmaPass) throw new Error('Las contraseñas no coinciden.');
+      await auth.currentUser.updatePassword(nuevaPass);
+    }
+
+    // Actualizar displayName en Firebase Auth si cambió
+    if (auth.currentUser.displayName !== nombre) {
+      await auth.currentUser.updateProfile({ displayName: nombre });
+      currentUser.name = nombre;
+    }
+
+    // Actualizar Firestore
+    await db.collection('users').doc(currentUser.id).update({
+      name:    nombre,
+      phone:   document.getElementById('edit-perfil-telefono').value.trim(),
+      address: document.getElementById('edit-perfil-direccion').value.trim(),
+      commune: document.getElementById('edit-perfil-comuna').value.trim(),
+      region:  document.getElementById('edit-perfil-region').value,
+      country: document.getElementById('edit-perfil-pais').value.trim(),
+    });
+
+    // Reflejar nombre en header
+    document.getElementById('user-name').textContent = nombre;
+
+    statusEl.textContent = '✓ Cambios guardados correctamente.';
+    statusEl.className = 'edit-perfil-status ok';
+    setTimeout(cerrarModales, 1400);
+  } catch (err) {
+    let msg = err.message;
+    if (err.code === 'auth/requires-recent-login') {
+      msg = 'Para cambiar la contraseña cierra sesión e inicia nuevamente.';
+    }
+    statusEl.textContent = msg;
+    statusEl.className = 'edit-perfil-status err';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Guardar cambios';
+  }
+});
+
+document.getElementById('btn-cancelar-mi-perfil').addEventListener('click', cerrarModales);
+
 // ── SIGN OUT ────────────────────────────────
 document.getElementById('btn-signout').addEventListener('click',         () => { profileFormActive = false; auth.signOut(); });
 document.getElementById('btn-signout-pending').addEventListener('click', () => { profileFormActive = false; auth.signOut(); });
