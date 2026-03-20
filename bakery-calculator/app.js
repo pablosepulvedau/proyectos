@@ -63,6 +63,7 @@ const microsoftProvider = new firebase.auth.OAuthProvider('microsoft.com');
 const facebookProvider  = new firebase.auth.FacebookAuthProvider();
 
 let currentUser = null;
+let profileFormActive = false;
 
 // ── EMAIL LINK SIGN-IN ───────────────────────
 // Si el usuario llegó desde un enlace de invitación, procesarlo antes de que
@@ -132,6 +133,7 @@ function showApp(data) {
 // ── AUTH STATE ──────────────────────────────
 auth.onAuthStateChanged(async user => {
   if (!user) {
+    if (profileFormActive) return; // no interrumpir el formulario de perfil
     currentUser = null;
     state.ingredientes = [];
     state.recetas      = [];
@@ -155,6 +157,7 @@ auth.onAuthStateChanged(async user => {
 
     if (!doc.exists) {
       // Nuevo usuario → mostrar formulario de perfil
+      profileFormActive = true;
       hideAllOverlays();
       document.getElementById('perfil-nombre').value = currentUser.name;
       document.getElementById('perfil-correo').value = currentUser.email;
@@ -179,6 +182,7 @@ auth.onAuthStateChanged(async user => {
     showApp({ ...data, ...patch });
   } catch (err) {
     console.error('Error en auth state:', err);
+    if (profileFormActive) return;
     hideAllOverlays();
     document.getElementById('login-overlay').classList.remove('hidden');
   }
@@ -310,6 +314,7 @@ document.getElementById('form-perfil').addEventListener('submit', async e => {
       ingredientes: [], recetas: [], nextIngId: 1, nextRecId: 1,
     });
 
+    profileFormActive = false;
     showApp({ plan, ingredientes: [], recetas: [], nextIngId: 1, nextRecId: 1 });
   } catch (err) {
     console.error('Error al guardar perfil:', err);
@@ -320,8 +325,8 @@ document.getElementById('form-perfil').addEventListener('submit', async e => {
 });
 
 // ── SIGN OUT ────────────────────────────────
-document.getElementById('btn-signout').addEventListener('click',         () => auth.signOut());
-document.getElementById('btn-signout-pending').addEventListener('click', () => auth.signOut());
+document.getElementById('btn-signout').addEventListener('click',         () => { profileFormActive = false; auth.signOut(); });
+document.getElementById('btn-signout-pending').addEventListener('click', () => { profileFormActive = false; auth.signOut(); });
 
 // ── VINCULAR CUENTAS (desde formulario de perfil de invitados) ────────────
 async function vincularProveedor(provider, nombre) {
