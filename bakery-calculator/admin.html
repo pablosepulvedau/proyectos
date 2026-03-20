@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Bakery Calculator</title>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #c0392b; --bg: #fdf6f0; --surface: #fff;
+      --border: #e8d5c4; --text: #2c1810; --text-muted: #7f6357;
+      --radius: 10px;
+    }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* LOGIN */
+    #login-screen {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #c0392b, #e67e22);
+    }
+    .login-box {
+      background: #fff; border-radius: 16px; padding: 2.5rem 2rem;
+      text-align: center; max-width: 360px; width: 90%;
+      box-shadow: 0 8px 32px rgba(0,0,0,.25);
+    }
+    .login-box h1 { font-size: 1.4rem; margin-bottom: .5rem; }
+    .login-box p { color: var(--text-muted); font-size: .9rem; margin-bottom: 1.5rem; }
+    .btn-google {
+      display: inline-flex; align-items: center; gap: .6rem;
+      padding: .7rem 1.4rem; background: #fff;
+      border: 1.5px solid var(--border); border-radius: 8px;
+      font-size: .95rem; font-weight: 600; cursor: pointer;
+      box-shadow: 0 1px 4px rgba(0,0,0,.12); width: 100%;
+      justify-content: center;
+    }
+    .btn-google:hover { background: #f5f5f5; }
+
+    /* APP */
+    #app-screen { display: none; }
+    header {
+      background: linear-gradient(135deg, #c0392b, #e67e22);
+      color: #fff; padding: 1rem 1.5rem;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    header h1 { font-size: 1.2rem; }
+    .btn-signout {
+      background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.5);
+      color: #fff; padding: .4rem .9rem; border-radius: 6px;
+      cursor: pointer; font-size: .85rem;
+    }
+    main { max-width: 960px; margin: 0 auto; padding: 2rem 1rem; }
+    h2 { color: var(--primary); margin-bottom: 1rem; }
+
+    /* STATS */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1rem; text-align: center;
+    }
+    .stat-card .num { font-size: 2rem; font-weight: 700; color: var(--primary); }
+    .stat-card .label { font-size: .8rem; color: var(--text-muted); margin-top: .2rem; }
+
+    /* TABLE */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; }
+    .search-bar { margin-bottom: 1rem; }
+    .search-bar input { padding: .55rem .75rem; border: 1.5px solid var(--border); border-radius: 7px; font-size: .95rem; width: 280px; }
+    table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    th, td { padding: .65rem .8rem; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background: var(--bg); font-weight: 700; color: var(--text-muted); font-size: .78rem; text-transform: uppercase; }
+    .user-info { display: flex; align-items: center; gap: .6rem; }
+    .user-info img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+    .plan-badge {
+      display: inline-block; padding: .2rem .6rem; border-radius: 999px;
+      font-size: .75rem; font-weight: 700; color: #fff;
+    }
+    .plan-select {
+      padding: .4rem .6rem; border: 1.5px solid var(--border); border-radius: 6px;
+      font-size: .85rem; background: var(--bg); cursor: pointer;
+    }
+    .btn-save {
+      padding: .35rem .8rem; background: #27ae60; color: #fff;
+      border: none; border-radius: 6px; font-size: .82rem;
+      font-weight: 600; cursor: pointer;
+    }
+    .btn-save:hover { background: #219a52; }
+    .empty { text-align: center; padding: 3rem; color: var(--text-muted); font-style: italic; }
+    .toast {
+      position: fixed; bottom: 1.5rem; right: 1.5rem;
+      background: #27ae60; color: #fff; padding: .75rem 1.2rem;
+      border-radius: 8px; font-weight: 600; font-size: .9rem;
+      opacity: 0; transition: opacity .3s; pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+    .error-box {
+      background: #fdecea; border: 1px solid #e74c3c;
+      border-radius: 8px; padding: 1rem; margin-bottom: 1rem;
+      color: #c0392b; display: none;
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>🎂 Admin Panel</h1>
+    <p>Acceso exclusivo para administradores</p>
+    <button class="btn-google" id="btn-login">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" alt="Google" />
+      Iniciar sesión con Google
+    </button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen">
+  <header>
+    <h1>🎂 Panel de Administración</h1>
+    <button class="btn-signout" id="btn-signout">Cerrar sesión</button>
+  </header>
+  <main>
+    <div class="error-box" id="error-box"></div>
+
+    <!-- Stats -->
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card"><div class="num" id="stat-total">—</div><div class="label">Usuarios totales</div></div>
+      <div class="stat-card"><div class="num" id="stat-free">—</div><div class="label">Plan Gratis</div></div>
+      <div class="stat-card"><div class="num" id="stat-panadero">—</div><div class="label">Plan Panadero</div></div>
+      <div class="stat-card"><div class="num" id="stat-pro">—</div><div class="label">Plan Pro</div></div>
+    </div>
+
+    <!-- Tabla usuarios -->
+    <div class="card">
+      <h2>Usuarios registrados</h2>
+      <div class="search-bar">
+        <input type="text" id="buscar-usuario" placeholder="Buscar por nombre o correo..." />
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Usuario</th>
+            <th>Correo</th>
+            <th>Plan actual</th>
+            <th>Cambiar plan</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-usuarios">
+          <tr><td colspan="5" class="empty">Cargando usuarios...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast">✓ Plan actualizado</div>
+
+<script>
+  const ADMIN_EMAIL = 'pisepulvedau@gmail.com';
+
+  const PLAN_COLORS = { free: '#95a5a6', panadero: '#e67e22', pro: '#c0392b' };
+  const PLAN_NOMBRES = { free: '🆓 Gratis', panadero: '🥖 Panadero', pro: '⭐ Pro' };
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyASvG3tksjSus2F8zHqu9tywdpC5sNNZok",
+    authDomain: "bakery-calculator-655cb.firebaseapp.com",
+    projectId: "bakery-calculator-655cb",
+    storageBucket: "bakery-calculator-655cb.firebasestorage.app",
+    messagingSenderId: "127301563344",
+    appId: "1:127301563344:web:b81796065a2d59dad3ffd5"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db   = firebase.firestore();
+  const provider = new firebase.auth.GoogleAuthProvider();
+
+  let todosLosUsuarios = [];
+
+  auth.onAuthStateChanged(user => {
+    if (!user) {
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('app-screen').style.display = 'none';
+      return;
+    }
+    if (user.email !== ADMIN_EMAIL) {
+      auth.signOut();
+      mostrarError('Acceso denegado. Solo el administrador puede acceder a este panel.');
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('app-screen').style.display = 'none';
+      return;
+    }
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'block';
+    cargarUsuarios();
+  });
+
+  document.getElementById('btn-login').addEventListener('click', () => {
+    auth.signInWithPopup(provider).catch(err => {
+      mostrarError('Error al iniciar sesión: ' + err.message);
+    });
+  });
+
+  document.getElementById('btn-signout').addEventListener('click', () => auth.signOut());
+
+  document.getElementById('buscar-usuario').addEventListener('input', function () {
+    renderTabla(this.value.toLowerCase());
+  });
+
+  async function cargarUsuarios() {
+    try {
+      const snap = await db.collection('users').get();
+      todosLosUsuarios = snap.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
+      actualizarStats();
+      renderTabla();
+    } catch (err) {
+      mostrarError('Error al cargar usuarios: ' + err.message);
+    }
+  }
+
+  function actualizarStats() {
+    const counts = { free: 0, panadero: 0, pro: 0 };
+    todosLosUsuarios.forEach(u => { counts[u.plan || 'free']++; });
+    document.getElementById('stat-total').textContent    = todosLosUsuarios.length;
+    document.getElementById('stat-free').textContent     = counts.free;
+    document.getElementById('stat-panadero').textContent = counts.panadero;
+    document.getElementById('stat-pro').textContent      = counts.pro;
+  }
+
+  function renderTabla(filtro = '') {
+    const tbody = document.getElementById('tbody-usuarios');
+    const lista = filtro
+      ? todosLosUsuarios.filter(u =>
+          (u.name || '').toLowerCase().includes(filtro) ||
+          (u.email || '').toLowerCase().includes(filtro))
+      : todosLosUsuarios;
+
+    if (lista.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty">No hay usuarios registrados</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = lista.map((u, i) => {
+      const plan = u.plan || 'free';
+      return `
+        <tr>
+          <td>${i + 1}</td>
+          <td>
+            <div class="user-info">
+              ${u.picture ? `<img src="${u.picture}" alt="${u.name || ''}" />` : ''}
+              <span>${u.name || '—'}</span>
+            </div>
+          </td>
+          <td>${u.email || '—'}</td>
+          <td><span class="plan-badge" style="background:${PLAN_COLORS[plan]}">${PLAN_NOMBRES[plan]}</span></td>
+          <td style="display:flex;gap:.5rem;align-items:center">
+            <select class="plan-select" id="select-${u.uid}">
+              <option value="free"     ${plan === 'free'     ? 'selected' : ''}>🆓 Gratis</option>
+              <option value="panadero" ${plan === 'panadero' ? 'selected' : ''}>🥖 Panadero</option>
+              <option value="pro"      ${plan === 'pro'      ? 'selected' : ''}>⭐ Pro</option>
+            </select>
+            <button class="btn-save" onclick="cambiarPlan('${u.uid}')">Guardar</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  async function cambiarPlan(uid) {
+    const nuevoPlan = document.getElementById(`select-${uid}`).value;
+    try {
+      await db.collection('users').doc(uid).update({ plan: nuevoPlan });
+      const idx = todosLosUsuarios.findIndex(u => u.uid === uid);
+      if (idx !== -1) todosLosUsuarios[idx].plan = nuevoPlan;
+      actualizarStats();
+      renderTabla(document.getElementById('buscar-usuario').value.toLowerCase());
+      mostrarToast();
+    } catch (err) {
+      mostrarError('Error al actualizar plan: ' + err.message);
+    }
+  }
+
+  function mostrarToast() {
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+  }
+
+  function mostrarError(msg) {
+    const el = document.getElementById('error-box');
+    el.textContent = msg;
+    el.style.display = 'block';
+    setTimeout(() => el.style.display = 'none', 5000);
+  }
+</script>
+</body>
+</html>

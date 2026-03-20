@@ -2,6 +2,58 @@
    BAKERY COST CALCULATOR - APP
    ========================================= */
 
+// ── PLANES ───────────────────────────────────
+const PLANES = {
+  free: {
+    nombre: 'Gratis', emoji: '🆓',
+    maxIng: 5, maxRec: 2, imprimir: false,
+    precio: 'Gratis', color: '#95a5a6',
+    features: ['Hasta 5 ingredientes', 'Hasta 2 recetas', 'Cálculo de costos básico'],
+  },
+  panadero: {
+    nombre: 'Panadero', emoji: '🥖',
+    maxIng: 50, maxRec: 20, imprimir: true,
+    precio: '$9.99 / mes', color: '#e67e22',
+    features: ['Hasta 50 ingredientes', 'Hasta 20 recetas', 'Cálculo completo', 'Imprimir y exportar'],
+  },
+  pro: {
+    nombre: 'Pro', emoji: '⭐',
+    maxIng: Infinity, maxRec: Infinity, imprimir: true,
+    precio: '$19.99 / mes', color: '#c0392b',
+    features: ['Ingredientes ilimitados', 'Recetas ilimitadas', 'Cálculo completo', 'Imprimir y exportar', 'Soporte prioritario'],
+  },
+};
+
+let currentPlan = 'free';
+
+function planActual()       { return PLANES[currentPlan]; }
+function puedeAgregarIng()  { return state.ingredientes.length < planActual().maxIng; }
+function puedeAgregarRec()  { return state.recetas.length < planActual().maxRec; }
+
+function actualizarPlanBadge() {
+  const plan = planActual();
+  const badge = document.getElementById('plan-badge');
+  badge.textContent = `${plan.emoji} ${plan.nombre}`;
+  badge.style.background = plan.color;
+}
+
+function mostrarModalUpgrade(motivo) {
+  document.getElementById('upgrade-motivo').textContent = motivo;
+  document.getElementById('upgrade-planes').innerHTML = Object.entries(PLANES).map(([key, plan]) => `
+    <div class="upgrade-plan-card ${key === currentPlan ? 'plan-actual' : ''}">
+      <div class="upgrade-plan-header" style="background:${plan.color}">
+        <span>${plan.emoji} ${plan.nombre}</span>
+        <strong>${plan.precio}</strong>
+      </div>
+      <ul>${plan.features.map(f => `<li>✓ ${f}</li>`).join('')}</ul>
+      ${key === currentPlan
+        ? '<div class="plan-actual-badge">Plan actual</div>'
+        : `<a href="mailto:pisepulvedau@gmail.com?subject=Quiero contratar Plan ${plan.nombre}&body=Hola, quiero contratar el plan ${plan.nombre} (${plan.precio}). Mi correo es: ${currentUser?.email || ''}" class="btn btn-primary upgrade-btn" style="background:${plan.color}">Contratar →</a>`}
+    </div>
+  `).join('');
+  abrirModal('modal-upgrade');
+}
+
 // ── AUTH ────────────────────────────────────
 const auth = firebase.auth();
 const db   = firebase.firestore();
@@ -25,6 +77,7 @@ auth.onAuthStateChanged(user => {
 
     Object.assign(state, { ingredientes: [], recetas: [], nextIngId: 1, nextRecId: 1 });
     loadState().then(() => {
+      actualizarPlanBadge();
       cargarDemoData();
       renderTablaIngredientes();
       renderRecetas();
@@ -72,7 +125,25 @@ async function loadState() {
   if (!currentUser) return;
   try {
     const doc = await db.collection('users').doc(currentUser.id).get();
-    if (doc.exists) Object.assign(state, doc.data());
+    if (doc.exists) {
+      const data = doc.data();
+      if (data.ingredientes) state.ingredientes = data.ingredientes;
+      if (data.recetas)      state.recetas      = data.recetas;
+      if (data.nextIngId)    state.nextIngId    = data.nextIngId;
+      if (data.nextRecId)    state.nextRecId    = data.nextRecId;
+      currentPlan = data.plan || 'free';
+    } else {
+      // Nuevo usuario: crear documento con plan gratis
+      await db.collection('users').doc(currentUser.id).set({
+        name:      currentUser.name,
+        email:     currentUser.email,
+        picture:   currentUser.picture,
+        plan:      'free',
+        planSince: firebase.firestore.FieldValue.serverTimestamp(),
+        ingredientes: [], recetas: [], nextIngId: 1, nextRecId: 1,
+      });
+      currentPlan = 'free';
+    }
   } catch (err) {
     console.error('Error al cargar:', err);
   }
@@ -109,6 +180,10 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 // ── INGREDIENTES ───────────────────────────
 document.getElementById('form-ingrediente').addEventListener('submit', e => {
   e.preventDefault();
+  if (!puedeAgregarIng()) {
+    mostrarModalUpgrade(`Tu plan ${planActual().nombre} permite máximo ${planActual().maxIng} ingredientes.`);
+    return;
+  }
   const nombre = document.getElementById('ing-nombre').value.trim();
   const unidad = document.getElementById('ing-unidad').value;
   const costo  = parseFloat(document.getElementById('ing-costo').value);
@@ -193,6 +268,10 @@ window.eliminarIngrediente = function(id) {
 // ── RECETAS ────────────────────────────────
 document.getElementById('form-receta').addEventListener('submit', e => {
   e.preventDefault();
+  if (!puedeAgregarRec()) {
+    mostrarModalUpgrade(`Tu plan ${planActual().nombre} permite máximo ${planActual().maxRec} recetas.`);
+    return;
+  }
   const nombre   = document.getElementById('rec-nombre').value.trim();
   const unidades = parseInt(document.getElementById('rec-unidades').value);
   if (!nombre || isNaN(unidades) || unidades < 1) return;
@@ -405,6 +484,10 @@ function actualizarCalculos() {
 
 // ── IMPRIMIR ────────────────────────────────
 document.getElementById('btn-imprimir').addEventListener('click', () => {
+  if (!planActual().imprimir) {
+    mostrarModalUpgrade('La función de imprimir y exportar no está disponible en tu plan actual.');
+    return;
+  }
   window.print();
 });
 

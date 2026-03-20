@@ -32,6 +32,7 @@
         <p class="subtitle">Gestiona ingredientes, recetas y calcula el precio de venta ideal</p>
       </div>
       <div id="auth-section" class="hidden">
+        <span id="plan-badge" class="plan-badge"></span>
         <img id="user-avatar" src="" alt="Avatar" />
         <span id="user-name"></span>
         <button id="btn-signout" class="btn btn-ghost">Cerrar sesión</button>
@@ -276,6 +277,16 @@
         <button class="btn btn-primary" id="btn-agregar-rec-ing">Agregar</button>
         <button class="btn btn-ghost" id="btn-cancelar-rec-ing">Cancelar</button>
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Upgrade de plan -->
+  <div id="modal-upgrade" class="modal modal-upgrade hidden">
+    <div class="modal-content modal-upgrade-content">
+      <h3>Mejora tu plan</h3>
+      <p id="upgrade-motivo" class="upgrade-motivo"></p>
+      <div id="upgrade-planes" class="upgrade-planes"></div>
+      <button class="btn btn-ghost" onclick="cerrarModales()" style="margin-top:1rem;width:100%">Cerrar</button>
     </div>
   </div>
 
