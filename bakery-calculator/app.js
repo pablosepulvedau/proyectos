@@ -39,6 +39,7 @@ function actualizarPlanBadge() {
 
 function mostrarModalUpgrade(motivo) {
   document.getElementById('upgrade-motivo').textContent = motivo;
+  document.getElementById('upgrade-contacto').classList.add('hidden');
   document.getElementById('upgrade-planes').innerHTML = Object.entries(PLANES).map(([key, plan]) => `
     <div class="upgrade-plan-card ${key === currentPlan ? 'plan-actual' : ''}">
       <div class="upgrade-plan-header" style="background:${plan.color}">
@@ -48,7 +49,7 @@ function mostrarModalUpgrade(motivo) {
       <ul>${plan.features.map(f => `<li>✓ ${f}</li>`).join('')}</ul>
       ${key === currentPlan
         ? '<div class="plan-actual-badge">Plan actual</div>'
-        : `<a href="mailto:pisepulvedau@gmail.com?subject=Quiero contratar Plan ${plan.nombre}&body=Hola, quiero contratar el plan ${plan.nombre} (${plan.precio}). Mi correo es: ${currentUser?.email || ''}" class="btn btn-primary upgrade-btn" style="background:${plan.color}">Contratar →</a>`}
+        : `<button class="upgrade-btn" style="background:${plan.color}" onclick="mostrarContacto('${plan.nombre}', '${plan.precio}')">Contratar →</button>`}
     </div>
   `).join('');
   abrirModal('modal-upgrade');
@@ -545,6 +546,30 @@ function cargarDemoData() {
 
   saveState();
 }
+
+// ── CONTACTO UPGRADE ───────────────────────
+window.mostrarContacto = function(planNombre, planPrecio) {
+  const email   = currentUser?.email || '';
+  const mensaje = `Hola, me interesa contratar el Plan ${planNombre} (${planPrecio}). Mi correo es: ${email}`;
+
+  document.getElementById('upgrade-contacto').innerHTML = `
+    <div class="contacto-box">
+      <p>Para contratar el <strong>Plan ${planNombre}</strong>, escríbenos por cualquiera de estos medios:</p>
+      <div class="contacto-opciones">
+        <button class="contacto-btn contacto-email" onclick="
+          navigator.clipboard.writeText('pisepulvedau@gmail.com');
+          this.textContent='✓ Copiado';
+          setTimeout(()=>this.textContent='📧 Copiar correo',2000)
+        ">📧 Copiar correo</button>
+        <a class="contacto-btn contacto-wa"
+           href="https://wa.me/?text=${encodeURIComponent(mensaje)}"
+           target="_blank">💬 Escribir por WhatsApp</a>
+      </div>
+      <p class="contacto-nota">Indica tu correo <strong>${email}</strong> y el plan que deseas. Te activamos el acceso en menos de 24 horas.</p>
+    </div>
+  `;
+  document.getElementById('upgrade-contacto').classList.remove('hidden');
+};
 
 // ── INIT ───────────────────────────────────
 // La carga inicial ocurre en onGoogleSignIn después de autenticar

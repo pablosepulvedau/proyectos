@@ -448,6 +448,29 @@ tfoot td { font-weight: 700; background: var(--bg); }
 }
 .upgrade-btn:hover { filter: brightness(.88); }
 
+/* CONTACTO */
+.contacto-box {
+  margin-top: 1.2rem;
+  background: #f0f9ff;
+  border: 1.5px solid #3498db;
+  border-radius: var(--radius);
+  padding: 1rem 1.2rem;
+  font-size: .9rem;
+}
+.contacto-box p { margin-bottom: .8rem; color: var(--text); }
+.contacto-opciones { display: flex; gap: .7rem; flex-wrap: wrap; margin-bottom: .8rem; }
+.contacto-btn {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .55rem 1rem; border-radius: 7px;
+  font-size: .88rem; font-weight: 600; cursor: pointer;
+  text-decoration: none; border: none;
+}
+.contacto-email { background: #3498db; color: #fff; }
+.contacto-email:hover { background: #2980b9; }
+.contacto-wa { background: #25d366; color: #fff; }
+.contacto-wa:hover { background: #1ebe57; }
+.contacto-nota { font-size: .82rem; color: var(--text-muted); margin-bottom: 0 !important; }
+
 /* PRINT */
 @media print {
   header, .tabs, .btn, .form-row, .search-bar, .modal, .modal-overlay { display: none !important; }
