@@ -145,13 +145,7 @@ auth.onAuthStateChanged(async user => {
     if (!data.picture && currentUser.picture) patch.picture = currentUser.picture;
     docRef.update(patch).catch(() => {});
 
-    if (data.status === 'pending') {
-      hideAllOverlays();
-      document.getElementById('pending-overlay').classList.remove('hidden');
-      return;
-    }
-
-    // status === 'active' o sin status (compatibilidad)
+    // Cargar app (todos los usuarios activos acceden directamente)
     showApp(data);
   } catch (err) {
     console.error('Error en auth state:', err);
@@ -242,11 +236,10 @@ document.getElementById('form-perfil').addEventListener('submit', async e => {
     const emailKey  = currentUser.email.toLowerCase();
     const inviteRef = db.collection('pending_invites').doc(emailKey);
     const inviteDoc = await inviteRef.get();
-    let plan   = 'free';
-    let status = 'pending';
+    // Verificar si el admin pre-asignó un plan
+    let plan = 'free';
     if (inviteDoc.exists) {
-      plan   = inviteDoc.data().plan || 'free';
-      status = 'active';
+      plan = inviteDoc.data().plan || 'free';
       await inviteRef.delete();
     }
 
@@ -261,18 +254,13 @@ document.getElementById('form-perfil').addEventListener('submit', async e => {
       region,
       country:       pais,
       plan,
-      status,
+      status:        'active',   // acceso inmediato al plan gratis
       planSince: firebase.firestore.FieldValue.serverTimestamp(),
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       ingredientes: [], recetas: [], nextIngId: 1, nextRecId: 1,
     });
 
-    if (status === 'active') {
-      showApp({ plan, ingredientes: [], recetas: [], nextIngId: 1, nextRecId: 1 });
-    } else {
-      hideAllOverlays();
-      document.getElementById('pending-overlay').classList.remove('hidden');
-    }
+    showApp({ plan, ingredientes: [], recetas: [], nextIngId: 1, nextRecId: 1 });
   } catch (err) {
     console.error('Error al guardar perfil:', err);
     alert('Error: ' + err.message);
