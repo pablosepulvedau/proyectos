@@ -285,6 +285,8 @@
 
 <script>
   const ADMIN_EMAIL  = 'pisepulvedau@gmail.com';
+  // URL de la app principal (ajustar si está en otro dominio)
+  const APP_URL = window.location.origin + '/index.html';
   const PLAN_COLORS  = { free: '#95a5a6', panadero: '#e67e22', pro: '#c0392b' };
   const PLAN_NOMBRES = { free: '🆓 Gratis', panadero: '🥖 Panadero', pro: '⭐ Pro' };
 
@@ -449,17 +451,34 @@
     const nombre = document.getElementById('pre-nombre').value.trim();
     const plan   = document.getElementById('pre-plan').value;
     if (!email || !email.includes('@')) { mostrarError('Ingresa un correo válido.'); return; }
+
+    const actionCodeSettings = {
+      url: `${APP_URL}?invite=${encodeURIComponent(email)}`,
+      handleCodeInApp: true,
+    };
+
     try {
+      // Guardar invitación en Firestore
       await db.collection('pending_invites').doc(email).set({
         email, nombre, plan,
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         createdBy: ADMIN_EMAIL,
       });
+      // Enviar email con enlace de acceso
+      await auth.sendSignInLinkToEmail(email, actionCodeSettings);
+
       document.getElementById('pre-email').value  = '';
       document.getElementById('pre-nombre').value = '';
-      mostrarToast('Invitación creada para ' + email);
+      mostrarToast('✉️ Invitación enviada a ' + email);
       cargarTodo();
-    } catch (err) { mostrarError('Error: ' + err.message); }
+    } catch (err) {
+      // Si el email falla pero Firestore guardó, informar al usuario
+      if (err.code && err.code.startsWith('auth/')) {
+        mostrarError('Invitación guardada pero no se pudo enviar el email: ' + err.message + '. Verifica que "Email link" esté habilitado en Firebase Auth.');
+      } else {
+        mostrarError('Error: ' + err.message);
+      }
+    }
   };
 
   window.eliminarInvite = async function(id) {

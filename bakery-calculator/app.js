@@ -64,6 +64,32 @@ const facebookProvider  = new firebase.auth.FacebookAuthProvider();
 
 let currentUser = null;
 
+// ── EMAIL LINK SIGN-IN ───────────────────────
+// Si el usuario llegó desde un enlace de invitación, procesarlo antes de que
+// onAuthStateChanged reciba el usuario ya autenticado.
+if (auth.isSignInWithEmailLink(window.location.href)) {
+  const params = new URLSearchParams(window.location.search);
+  const email  = params.get('invite');
+  if (email) {
+    auth.signInWithEmailLink(email, window.location.href)
+      .then(() => {
+        sessionStorage.setItem('fromEmailLink', '1');
+        // Limpiar el enlace de la barra de dirección
+        window.history.replaceState({}, '', window.location.pathname);
+      })
+      .catch(err => {
+        window.history.replaceState({}, '', window.location.pathname);
+        // El error se mostrará cuando el login overlay esté visible
+        sessionStorage.setItem('emailLinkError', err.code === 'auth/invalid-action-code'
+          ? 'El enlace de invitación ya fue usado o expiró. Solicita una nueva invitación.'
+          : 'Error al procesar el enlace: ' + err.message);
+      });
+  } else {
+    sessionStorage.setItem('emailLinkError', 'El enlace no contiene el correo. Solicita una nueva invitación al administrador.');
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+}
+
 // ── OVERLAY CONTROL ─────────────────────────
 function hideAllOverlays() {
   ['login-overlay', 'profile-overlay', 'pending-overlay'].forEach(id => {
@@ -132,6 +158,10 @@ auth.onAuthStateChanged(async user => {
       hideAllOverlays();
       document.getElementById('perfil-nombre').value = currentUser.name;
       document.getElementById('perfil-correo').value = currentUser.email;
+      // Mostrar sección de contraseña/vínculos si vino por invitación
+      if (sessionStorage.getItem('fromEmailLink')) {
+        document.getElementById('invite-section').classList.remove('hidden');
+      }
       document.getElementById('profile-overlay').classList.remove('hidden');
       return;
     }
@@ -243,18 +273,38 @@ document.getElementById('form-perfil').addEventListener('submit', async e => {
       await inviteRef.delete();
     }
 
+    // Si el usuario vino por email link y eligió crear contraseña, vincularla
+    const password = (document.getElementById('perfil-password')?.value || '').trim();
+    if (password && sessionStorage.getItem('fromEmailLink')) {
+      if (password.length < 6) {
+        alert('La contraseña debe tener al menos 6 caracteres.');
+        btn.disabled = false;
+        btn.textContent = 'Guardar y continuar →';
+        return;
+      }
+      try {
+        await auth.currentUser.updatePassword(password);
+      } catch (err) {
+        console.warn('No se pudo crear la contraseña:', err.message);
+      }
+    }
+    sessionStorage.removeItem('fromEmailLink');
+
+    // Actualizar providers después de posibles vinculaciones
+    const updatedProviders = auth.currentUser?.providerData.map(p => p.providerId) || currentUser.providers;
+
     await db.collection('users').doc(currentUser.id).set({
       name:          nombre,
       email:         currentUser.email,
       picture:       currentUser.picture,
-      authProviders: currentUser.providers,
+      authProviders: updatedProviders,
       phone:         telefono,
       address:       direccion,
       commune:       comuna,
       region,
       country:       pais,
       plan,
-      status:        'active',   // acceso inmediato al plan gratis
+      status:        'active',
       planSince: firebase.firestore.FieldValue.serverTimestamp(),
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       ingredientes: [], recetas: [], nextIngId: 1, nextRecId: 1,
@@ -272,6 +322,41 @@ document.getElementById('form-perfil').addEventListener('submit', async e => {
 // ── SIGN OUT ────────────────────────────────
 document.getElementById('btn-signout').addEventListener('click',         () => auth.signOut());
 document.getElementById('btn-signout-pending').addEventListener('click', () => auth.signOut());
+
+// ── VINCULAR CUENTAS (desde formulario de perfil de invitados) ────────────
+async function vincularProveedor(provider, nombre) {
+  const statusEl = document.getElementById('link-status');
+  statusEl.style.color = '';
+  statusEl.textContent = 'Abriendo ventana...';
+  try {
+    await auth.currentUser.linkWithPopup(provider);
+    // Actualizar providers en currentUser
+    currentUser.providers = auth.currentUser.providerData.map(p => p.providerId);
+    statusEl.style.color = 'var(--success, #27ae60)';
+    statusEl.textContent = `✓ Cuenta de ${nombre} vinculada correctamente`;
+  } catch (err) {
+    statusEl.style.color = 'var(--danger, #e74c3c)';
+    if (err.code === 'auth/credential-already-in-use') {
+      statusEl.textContent = `Esta cuenta de ${nombre} ya pertenece a otro usuario.`;
+    } else if (err.code === 'auth/popup-closed-by-user') {
+      statusEl.textContent = '';
+    } else {
+      statusEl.textContent = 'Error: ' + err.message;
+    }
+  }
+}
+document.getElementById('btn-link-google').addEventListener('click',    () => vincularProveedor(googleProvider,    'Google'));
+document.getElementById('btn-link-microsoft').addEventListener('click', () => vincularProveedor(microsoftProvider, 'Microsoft'));
+document.getElementById('btn-link-facebook').addEventListener('click',  () => vincularProveedor(facebookProvider,  'Facebook'));
+
+// Mostrar error de email link si lo hay (se pone al iniciar sesión con enlace inválido)
+window.addEventListener('DOMContentLoaded', () => {
+  const emailLinkError = sessionStorage.getItem('emailLinkError');
+  if (emailLinkError) {
+    sessionStorage.removeItem('emailLinkError');
+    mostrarErrorLogin(emailLinkError);
+  }
+});
 
 // ── STATE ──────────────────────────────────
 const state = {
