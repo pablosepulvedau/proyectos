@@ -3,73 +3,51 @@
    ========================================= */
 
 // ── AUTH ────────────────────────────────────
+const auth = firebase.auth();
+const db   = firebase.firestore();
+const googleProvider = new firebase.auth.GoogleAuthProvider();
+
 let currentUser = null;
 
-function getStorageKey() {
-  return currentUser ? `bakery_state_${currentUser.id}` : 'bakery_state_guest';
-}
+auth.onAuthStateChanged(user => {
+  if (user) {
+    currentUser = {
+      id:      user.uid,
+      name:    user.displayName,
+      email:   user.email,
+      picture: user.photoURL,
+    };
+    document.getElementById('login-overlay').classList.add('hidden');
+    document.getElementById('auth-section').classList.remove('hidden');
+    document.getElementById('user-name').textContent = currentUser.name;
+    document.getElementById('user-avatar').src       = currentUser.picture;
+    document.getElementById('user-avatar').alt       = currentUser.name;
 
-function onGoogleSignIn(credential) {
-  // Decode JWT payload (no verification needed client-side)
-  const payload = JSON.parse(atob(credential.split('.')[1]));
-  currentUser = {
-    id:      payload.sub,
-    name:    payload.name,
-    email:   payload.email,
-    picture: payload.picture,
-  };
-
-  // Show app, hide overlay
-  document.getElementById('login-overlay').classList.add('hidden');
-  document.getElementById('auth-section').classList.remove('hidden');
-  document.getElementById('user-name').textContent   = currentUser.name;
-  document.getElementById('user-avatar').src         = currentUser.picture;
-  document.getElementById('user-avatar').alt         = currentUser.name;
-
-  // Load this user's data
-  Object.assign(state, { ingredientes: [], recetas: [], nextIngId: 1, nextRecId: 1 });
-  loadState();
-  cargarDemoData();
-  renderTablaIngredientes();
-  renderRecetas();
-}
-
-function signOut() {
-  google.accounts.id.disableAutoSelect();
-  currentUser = null;
-  // Reset state
-  state.ingredientes = [];
-  state.recetas = [];
-
-  document.getElementById('auth-section').classList.add('hidden');
-  document.getElementById('login-overlay').classList.remove('hidden');
-  document.getElementById('google-signin-btn').innerHTML = '';
-  initGoogleSignIn();
-}
-
-function initGoogleSignIn() {
-  google.accounts.id.initialize({
-    client_id: GOOGLE_CLIENT_ID,
-    callback: (response) => onGoogleSignIn(response.credential),
-    auto_select: true,
-  });
-  google.accounts.id.renderButton(
-    document.getElementById('google-signin-btn'),
-    { theme: 'outline', size: 'large', locale: 'es', text: 'signin_with' }
-  );
-  google.accounts.id.prompt();
-}
-
-window.addEventListener('load', () => {
-  if (typeof google !== 'undefined') {
-    initGoogleSignIn();
+    Object.assign(state, { ingredientes: [], recetas: [], nextIngId: 1, nextRecId: 1 });
+    loadState().then(() => {
+      cargarDemoData();
+      renderTablaIngredientes();
+      renderRecetas();
+    });
   } else {
-    document.querySelector('script[src*="gsi/client"]')
-      .addEventListener('load', initGoogleSignIn);
+    currentUser = null;
+    state.ingredientes = [];
+    state.recetas = [];
+    document.getElementById('auth-section').classList.add('hidden');
+    document.getElementById('login-overlay').classList.remove('hidden');
   }
 });
 
-document.getElementById('btn-signout').addEventListener('click', signOut);
+document.getElementById('google-signin-btn').addEventListener('click', () => {
+  auth.signInWithPopup(googleProvider).catch(err => {
+    console.error('Error al iniciar sesión:', err);
+    alert('Error al iniciar sesión. Intenta nuevamente.');
+  });
+});
+
+document.getElementById('btn-signout').addEventListener('click', () => {
+  auth.signOut();
+});
 
 // ── STATE ──────────────────────────────────
 const state = {
@@ -81,16 +59,23 @@ const state = {
 
 // ── PERSISTENCE ────────────────────────────
 function saveState() {
-  localStorage.setItem(getStorageKey(), JSON.stringify(state));
+  if (!currentUser) return;
+  db.collection('users').doc(currentUser.id).set({
+    ingredientes: state.ingredientes,
+    recetas:      state.recetas,
+    nextIngId:    state.nextIngId,
+    nextRecId:    state.nextRecId,
+  }).catch(err => console.error('Error al guardar:', err));
 }
 
-function loadState() {
-  const saved = localStorage.getItem(getStorageKey());
-  if (!saved) return;
+async function loadState() {
+  if (!currentUser) return;
   try {
-    const parsed = JSON.parse(saved);
-    Object.assign(state, parsed);
-  } catch {}
+    const doc = await db.collection('users').doc(currentUser.id).get();
+    if (doc.exists) Object.assign(state, doc.data());
+  } catch (err) {
+    console.error('Error al cargar:', err);
+  }
 }
 
 // ── HELPERS ────────────────────────────────

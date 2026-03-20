@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Calculadora de Costos de Pastelería</title>
   <link rel="stylesheet" href="styles.css" />
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -15,7 +18,10 @@
       <div class="login-logo">🎂</div>
       <h1>Calculadora de Pastelería</h1>
       <p>Inicia sesión con tu cuenta de Google para acceder a tus recetas e ingredientes</p>
-      <div id="google-signin-btn"></div>
+      <button id="google-signin-btn" class="btn-google-signin">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="20" />
+        Iniciar sesión con Google
+      </button>
     </div>
   </div>
 
@@ -276,7 +282,16 @@
   <div id="modal-overlay" class="modal-overlay hidden"></div>
 
   <script>
-    const GOOGLE_CLIENT_ID = '1009737023228-7aefp47npvm3tuic4l98ulg7inkjrvuj.apps.googleusercontent.com';
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyASvG3tksjSus2F8zHqu9tywdpC5sNNZok",
+      authDomain: "bakery-calculator-655cb.firebaseapp.com",
+      projectId: "bakery-calculator-655cb",
+      storageBucket: "bakery-calculator-655cb.firebasestorage.app",
+      messagingSenderId: "127301563344",
+      appId: "1:127301563344:web:b81796065a2d59dad3ffd5"
+    };
+    firebase.initializeApp(firebaseConfig);
   </script>
   <script src="app.js"></script>
 </body>
