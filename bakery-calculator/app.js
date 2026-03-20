@@ -2,6 +2,75 @@
    BAKERY COST CALCULATOR - APP
    ========================================= */
 
+// ── AUTH ────────────────────────────────────
+let currentUser = null;
+
+function getStorageKey() {
+  return currentUser ? `bakery_state_${currentUser.id}` : 'bakery_state_guest';
+}
+
+function onGoogleSignIn(credential) {
+  // Decode JWT payload (no verification needed client-side)
+  const payload = JSON.parse(atob(credential.split('.')[1]));
+  currentUser = {
+    id:      payload.sub,
+    name:    payload.name,
+    email:   payload.email,
+    picture: payload.picture,
+  };
+
+  // Show app, hide overlay
+  document.getElementById('login-overlay').classList.add('hidden');
+  document.getElementById('auth-section').classList.remove('hidden');
+  document.getElementById('user-name').textContent   = currentUser.name;
+  document.getElementById('user-avatar').src         = currentUser.picture;
+  document.getElementById('user-avatar').alt         = currentUser.name;
+
+  // Load this user's data
+  Object.assign(state, { ingredientes: [], recetas: [], nextIngId: 1, nextRecId: 1 });
+  loadState();
+  cargarDemoData();
+  renderTablaIngredientes();
+  renderRecetas();
+}
+
+function signOut() {
+  google.accounts.id.disableAutoSelect();
+  currentUser = null;
+  // Reset state
+  state.ingredientes = [];
+  state.recetas = [];
+
+  document.getElementById('auth-section').classList.add('hidden');
+  document.getElementById('login-overlay').classList.remove('hidden');
+  document.getElementById('google-signin-btn').innerHTML = '';
+  initGoogleSignIn();
+}
+
+function initGoogleSignIn() {
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: (response) => onGoogleSignIn(response.credential),
+    auto_select: true,
+  });
+  google.accounts.id.renderButton(
+    document.getElementById('google-signin-btn'),
+    { theme: 'outline', size: 'large', locale: 'es', text: 'signin_with' }
+  );
+  google.accounts.id.prompt();
+}
+
+window.addEventListener('load', () => {
+  if (typeof google !== 'undefined') {
+    initGoogleSignIn();
+  } else {
+    document.querySelector('script[src*="gsi/client"]')
+      .addEventListener('load', initGoogleSignIn);
+  }
+});
+
+document.getElementById('btn-signout').addEventListener('click', signOut);
+
 // ── STATE ──────────────────────────────────
 const state = {
   ingredientes: [],   // { id, nombre, unidad, costo }
@@ -12,11 +81,11 @@ const state = {
 
 // ── PERSISTENCE ────────────────────────────
 function saveState() {
-  localStorage.setItem('bakery_state', JSON.stringify(state));
+  localStorage.setItem(getStorageKey(), JSON.stringify(state));
 }
 
 function loadState() {
-  const saved = localStorage.getItem('bakery_state');
+  const saved = localStorage.getItem(getStorageKey());
   if (!saved) return;
   try {
     const parsed = JSON.parse(saved);
@@ -410,7 +479,4 @@ function cargarDemoData() {
 }
 
 // ── INIT ───────────────────────────────────
-loadState();
-cargarDemoData();
-renderTablaIngredientes();
-renderRecetas();
+// La carga inicial ocurre en onGoogleSignIn después de autenticar

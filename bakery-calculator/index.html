@@ -5,11 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Calculadora de Costos de Pastelería</title>
   <link rel="stylesheet" href="styles.css" />
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
+
+  <!-- LOGIN OVERLAY -->
+  <div id="login-overlay">
+    <div class="login-box">
+      <div class="login-logo">🎂</div>
+      <h1>Calculadora de Pastelería</h1>
+      <p>Inicia sesión con tu cuenta de Google para acceder a tus recetas e ingredientes</p>
+      <div id="google-signin-btn"></div>
+    </div>
+  </div>
+
   <header>
-    <h1>🎂 Calculadora de Costos de Pastelería</h1>
-    <p class="subtitle">Gestiona ingredientes, recetas y calcula el precio de venta ideal</p>
+    <div class="header-main">
+      <div>
+        <h1>🎂 Calculadora de Costos de Pastelería</h1>
+        <p class="subtitle">Gestiona ingredientes, recetas y calcula el precio de venta ideal</p>
+      </div>
+      <div id="auth-section" class="hidden">
+        <img id="user-avatar" src="" alt="Avatar" />
+        <span id="user-name"></span>
+        <button id="btn-signout" class="btn btn-ghost">Cerrar sesión</button>
+      </div>
+    </div>
   </header>
 
   <main>
@@ -254,6 +275,9 @@
 
   <div id="modal-overlay" class="modal-overlay hidden"></div>
 
+  <script>
+    const GOOGLE_CLIENT_ID = '1009737023228-7aefp47npvm3tuic4l98ulg7inkjrvuj.apps.googleusercontent.com';
+  </script>
   <script src="app.js"></script>
 </body>
 </html>
