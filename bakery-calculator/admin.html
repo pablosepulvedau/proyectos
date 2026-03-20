@@ -10,8 +10,10 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --primary: #c0392b; --bg: #fdf6f0; --surface: #fff;
+      --primary: #c0392b; --accent: #e67e22;
+      --bg: #fdf6f0; --surface: #fff;
       --border: #e8d5c4; --text: #2c1810; --text-muted: #7f6357;
+      --success: #27ae60; --danger: #e74c3c;
       --radius: 10px;
     }
     body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
@@ -20,7 +22,7 @@
     #login-screen {
       display: flex; align-items: center; justify-content: center;
       min-height: 100vh;
-      background: linear-gradient(135deg, #c0392b, #e67e22);
+      background: linear-gradient(135deg, var(--primary), var(--accent));
     }
     .login-box {
       background: #fff; border-radius: 16px; padding: 2.5rem 2rem;
@@ -28,78 +30,148 @@
       box-shadow: 0 8px 32px rgba(0,0,0,.25);
     }
     .login-box h1 { font-size: 1.4rem; margin-bottom: .5rem; }
-    .login-box p { color: var(--text-muted); font-size: .9rem; margin-bottom: 1.5rem; }
-    .btn-google {
+    .login-box p  { color: var(--text-muted); font-size: .9rem; margin-bottom: 1.5rem; }
+    .btn-social {
       display: inline-flex; align-items: center; gap: .6rem;
-      padding: .7rem 1.4rem; background: #fff;
-      border: 1.5px solid var(--border); border-radius: 8px;
-      font-size: .95rem; font-weight: 600; cursor: pointer;
-      box-shadow: 0 1px 4px rgba(0,0,0,.12); width: 100%;
-      justify-content: center;
+      padding: .65rem 1.2rem; background: #fff; border: 1.5px solid var(--border);
+      border-radius: 8px; font-size: .93rem; font-weight: 600; cursor: pointer;
+      box-shadow: 0 1px 4px rgba(0,0,0,.12); width: 100%; justify-content: center;
     }
-    .btn-google:hover { background: #f5f5f5; }
+    .btn-social:hover { background: #f5f5f5; }
 
-    /* APP */
+    /* HEADER */
     #app-screen { display: none; }
     header {
-      background: linear-gradient(135deg, #c0392b, #e67e22);
+      background: linear-gradient(135deg, var(--primary), var(--accent));
       color: #fff; padding: 1rem 1.5rem;
       display: flex; justify-content: space-between; align-items: center;
     }
     header h1 { font-size: 1.2rem; }
     .btn-signout {
       background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.5);
-      color: #fff; padding: .4rem .9rem; border-radius: 6px;
-      cursor: pointer; font-size: .85rem;
+      color: #fff; padding: .4rem .9rem; border-radius: 6px; cursor: pointer; font-size: .85rem;
     }
-    main { max-width: 960px; margin: 0 auto; padding: 2rem 1rem; }
+    main { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem; }
     h2 { color: var(--primary); margin-bottom: 1rem; }
 
     /* STATS */
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-    .stat-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 1rem; text-align: center;
-    }
-    .stat-card .num { font-size: 2rem; font-weight: 700; color: var(--primary); }
-    .stat-card .label { font-size: .8rem; color: var(--text-muted); margin-top: .2rem; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; text-align: center; }
+    .stat-card .num  { font-size: 2rem; font-weight: 700; color: var(--primary); }
+    .stat-card .label{ font-size: .8rem; color: var(--text-muted); margin-top: .2rem; }
+    .stat-card.pending-stat .num { color: var(--accent); }
+
+    /* CARDS */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: .5rem; }
+
+    /* SEARCH */
+    .search-bar { margin-bottom: 1rem; }
+    .search-bar input { padding: .55rem .75rem; border: 1.5px solid var(--border); border-radius: 7px; font-size: .95rem; width: 300px; }
 
     /* TABLE */
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; }
-    .search-bar { margin-bottom: 1rem; }
-    .search-bar input { padding: .55rem .75rem; border: 1.5px solid var(--border); border-radius: 7px; font-size: .95rem; width: 280px; }
-    table { width: 100%; border-collapse: collapse; font-size: .9rem; }
-    th, td { padding: .65rem .8rem; text-align: left; border-bottom: 1px solid var(--border); }
-    th { background: var(--bg); font-weight: 700; color: var(--text-muted); font-size: .78rem; text-transform: uppercase; }
-    .user-info { display: flex; align-items: center; gap: .6rem; }
-    .user-info img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+    table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    th, td { padding: .6rem .75rem; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background: var(--bg); font-weight: 700; color: var(--text-muted); font-size: .75rem; text-transform: uppercase; }
+    tbody tr:hover { background: #fdf0e8; }
+
+    .user-info { display: flex; align-items: center; gap: .5rem; }
+    .user-info img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
+    .user-avatar-placeholder {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--primary); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .85rem; font-weight: 700; flex-shrink: 0;
+    }
+
     .plan-badge {
-      display: inline-block; padding: .2rem .6rem; border-radius: 999px;
-      font-size: .75rem; font-weight: 700; color: #fff;
+      display: inline-block; padding: .18rem .5rem; border-radius: 999px;
+      font-size: .72rem; font-weight: 700; color: #fff;
     }
-    .plan-select {
-      padding: .4rem .6rem; border: 1.5px solid var(--border); border-radius: 6px;
-      font-size: .85rem; background: var(--bg); cursor: pointer;
+    .status-badge {
+      display: inline-block; padding: .18rem .5rem; border-radius: 999px;
+      font-size: .72rem; font-weight: 700;
     }
-    .btn-save {
-      padding: .35rem .8rem; background: #27ae60; color: #fff;
-      border: none; border-radius: 6px; font-size: .82rem;
-      font-weight: 600; cursor: pointer;
+    .status-active   { background: #d4edda; color: #155724; }
+    .status-pending  { background: #fff3cd; color: #856404; }
+    .status-rejected { background: #f8d7da; color: #721c24; }
+
+    .provider-badge {
+      display: inline-block; padding: .15rem .4rem; border-radius: 4px;
+      font-size: .7rem; font-weight: 600; background: var(--bg); border: 1px solid var(--border);
+      color: var(--text-muted);
     }
-    .btn-save:hover { background: #219a52; }
-    .empty { text-align: center; padding: 3rem; color: var(--text-muted); font-style: italic; }
+
+    /* BUTTONS */
+    .btn { padding: .5rem 1rem; border: none; border-radius: 6px; font-size: .85rem; font-weight: 600; cursor: pointer; transition: all .2s; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { filter: brightness(.88); }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-success:hover { filter: brightness(.88); }
+    .btn-danger  { background: var(--danger); color: #fff; padding: .3rem .65rem; font-size: .78rem; }
+    .btn-danger:hover  { filter: brightness(.88); }
+    .btn-ghost   { background: transparent; border: 1.5px solid var(--border); color: var(--text-muted); }
+    .btn-ghost:hover   { background: var(--bg); }
+    .btn-approve { background: var(--success); color: #fff; padding: .3rem .7rem; font-size: .8rem; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; }
+    .btn-approve:hover { filter: brightness(.88); }
+    .btn-reject  { background: var(--danger);  color: #fff; padding: .3rem .7rem; font-size: .8rem; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; }
+    .btn-reject:hover  { filter: brightness(.88); }
+    .btn-save { background: var(--success); color: #fff; padding: .3rem .7rem; font-size: .8rem; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; }
+    .btn-save:hover { filter: brightness(.88); }
+    .btn-detail { background: #3498db; color: #fff; padding: .25rem .6rem; font-size: .75rem; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; }
+    .btn-detail:hover { filter: brightness(.88); }
+
+    /* PLAN SELECT */
+    .plan-select { padding: .35rem .5rem; border: 1.5px solid var(--border); border-radius: 6px; font-size: .82rem; background: var(--bg); cursor: pointer; }
+
+    /* FORMS */
+    .form-row { display: flex; gap: .75rem; flex-wrap: wrap; align-items: flex-end; }
+    .form-group { display: flex; flex-direction: column; gap: .25rem; flex: 1 1 160px; }
+    .form-group label { font-size: .82rem; font-weight: 600; color: var(--text-muted); }
+    .form-group input, .form-group select {
+      padding: .5rem .7rem; border: 1.5px solid var(--border); border-radius: 7px;
+      font-size: .92rem; background: var(--bg); color: var(--text);
+    }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary); background: #fff; }
+
+    /* EMPTY */
+    .empty { text-align: center; padding: 2rem; color: var(--text-muted); font-style: italic; }
+
+    /* DETAIL ROW */
+    .detail-row { display: none; background: #fdf6f0; }
+    .detail-row.open { display: table-row; }
+    .detail-row td { padding: .8rem 1rem; }
+    .detail-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: .5rem .8rem; font-size: .83rem;
+    }
+    .detail-item label { font-weight: 700; color: var(--text-muted); display: block; font-size: .75rem; text-transform: uppercase; }
+    .detail-item span  { color: var(--text); }
+
+    /* TOAST / ERROR */
     .toast {
       position: fixed; bottom: 1.5rem; right: 1.5rem;
-      background: #27ae60; color: #fff; padding: .75rem 1.2rem;
+      background: var(--success); color: #fff; padding: .75rem 1.2rem;
       border-radius: 8px; font-weight: 600; font-size: .9rem;
-      opacity: 0; transition: opacity .3s; pointer-events: none;
+      opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 999;
     }
     .toast.show { opacity: 1; }
     .error-box {
-      background: #fdecea; border: 1px solid #e74c3c;
-      border-radius: 8px; padding: 1rem; margin-bottom: 1rem;
-      color: #c0392b; display: none;
+      background: #fdecea; border: 1px solid var(--danger);
+      border-radius: 8px; padding: .9rem 1rem; margin-bottom: 1rem;
+      color: var(--primary); display: none; font-size: .9rem;
     }
+
+    /* PENDING SECTION */
+    .pending-alert {
+      background: #fff8e1; border: 2px solid var(--accent);
+      border-radius: var(--radius); padding: 1.2rem 1.5rem; margin-bottom: 1.5rem;
+    }
+    .pending-alert h3 { color: var(--accent); margin-bottom: .8rem; font-size: 1rem; }
+
+    /* INVITE FORM */
+    .invite-form { background: #f0f9ff; border: 1.5px solid #3498db; border-radius: var(--radius); padding: 1.2rem 1.5rem; margin-bottom: 1.5rem; }
+    .invite-form h3 { color: #2980b9; margin-bottom: .9rem; font-size: 1rem; }
   </style>
 </head>
 <body>
@@ -109,7 +181,7 @@
   <div class="login-box">
     <h1>🎂 Admin Panel</h1>
     <p>Acceso exclusivo para administradores</p>
-    <button class="btn-google" id="btn-login">
+    <button class="btn-social" id="btn-login">
       <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" alt="Google" />
       Iniciar sesión con Google
     </button>
@@ -128,16 +200,64 @@
     <!-- Stats -->
     <div class="stats-grid" id="stats-grid">
       <div class="stat-card"><div class="num" id="stat-total">—</div><div class="label">Usuarios totales</div></div>
+      <div class="stat-card pending-stat"><div class="num" id="stat-pending">—</div><div class="label">Pendientes</div></div>
       <div class="stat-card"><div class="num" id="stat-free">—</div><div class="label">Plan Gratis</div></div>
       <div class="stat-card"><div class="num" id="stat-panadero">—</div><div class="label">Plan Panadero</div></div>
       <div class="stat-card"><div class="num" id="stat-pro">—</div><div class="label">Plan Pro</div></div>
     </div>
 
-    <!-- Tabla usuarios -->
+    <!-- Pendientes de aprobación -->
+    <div id="seccion-pendientes" class="pending-alert" style="display:none">
+      <h3>⏳ Usuarios pendientes de aprobación</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Usuario</th><th>Correo</th><th>Registrado</th><th>Región / País</th><th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-pendientes"></tbody>
+      </table>
+    </div>
+
+    <!-- Pre-registrar usuario (invitación) -->
+    <div class="invite-form">
+      <h3>✉️ Pre-registrar usuario</h3>
+      <p style="font-size:.85rem;color:#555;margin-bottom:.9rem">Crea una invitación para un usuario que aún no se ha registrado. Se le asignará el plan indicado automáticamente al registrarse.</p>
+      <div class="form-row">
+        <div class="form-group" style="flex:2 1 220px">
+          <label>Correo del usuario *</label>
+          <input type="email" id="pre-email" placeholder="usuario@correo.com" />
+        </div>
+        <div class="form-group">
+          <label>Nombre (opcional)</label>
+          <input type="text" id="pre-nombre" placeholder="Nombre completo" />
+        </div>
+        <div class="form-group">
+          <label>Plan asignado</label>
+          <select id="pre-plan">
+            <option value="free">🆓 Gratis</option>
+            <option value="panadero">🥖 Panadero</option>
+            <option value="pro">⭐ Pro</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:0 0 auto;justify-content:flex-end">
+          <label>&nbsp;</label>
+          <button class="btn btn-primary" onclick="crearInvite()">Crear invitación</button>
+        </div>
+      </div>
+
+      <!-- Invites existentes -->
+      <div id="invites-lista" style="margin-top:1rem"></div>
+    </div>
+
+    <!-- Tabla usuarios registrados -->
     <div class="card">
-      <h2>Usuarios registrados</h2>
+      <div class="card-header">
+        <h2 style="margin-bottom:0">Usuarios registrados</h2>
+        <button class="btn btn-ghost" onclick="cargarTodo()" style="font-size:.82rem">↺ Actualizar</button>
+      </div>
       <div class="search-bar">
-        <input type="text" id="buscar-usuario" placeholder="Buscar por nombre o correo..." />
+        <input type="text" id="buscar-usuario" placeholder="Buscar por nombre, correo, teléfono, región..." />
       </div>
       <table>
         <thead>
@@ -145,24 +265,27 @@
             <th>#</th>
             <th>Usuario</th>
             <th>Correo</th>
+            <th>Teléfono</th>
+            <th>Región / País</th>
+            <th>Proveedores</th>
             <th>Plan actual</th>
+            <th>Estado</th>
             <th>Cambiar plan</th>
           </tr>
         </thead>
         <tbody id="tbody-usuarios">
-          <tr><td colspan="5" class="empty">Cargando usuarios...</td></tr>
+          <tr><td colspan="9" class="empty">Cargando...</td></tr>
         </tbody>
       </table>
     </div>
   </main>
 </div>
 
-<div class="toast" id="toast">✓ Plan actualizado</div>
+<div class="toast" id="toast">✓ Acción completada</div>
 
 <script>
-  const ADMIN_EMAIL = 'pisepulvedau@gmail.com';
-
-  const PLAN_COLORS = { free: '#95a5a6', panadero: '#e67e22', pro: '#c0392b' };
+  const ADMIN_EMAIL  = 'pisepulvedau@gmail.com';
+  const PLAN_COLORS  = { free: '#95a5a6', panadero: '#e67e22', pro: '#c0392b' };
   const PLAN_NOMBRES = { free: '🆓 Gratis', panadero: '🥖 Panadero', pro: '⭐ Pro' };
 
   const firebaseConfig = {
@@ -176,124 +299,290 @@
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db   = firebase.firestore();
-  const provider = new firebase.auth.GoogleAuthProvider();
 
   let todosLosUsuarios = [];
+  let todasLasInvites  = [];
 
+  // ── AUTH ──────────────────────────────────
   auth.onAuthStateChanged(user => {
     if (!user) {
       document.getElementById('login-screen').style.display = 'flex';
-      document.getElementById('app-screen').style.display = 'none';
+      document.getElementById('app-screen').style.display   = 'none';
       return;
     }
     if (user.email !== ADMIN_EMAIL) {
       auth.signOut();
       mostrarError('Acceso denegado. Solo el administrador puede acceder a este panel.');
       document.getElementById('login-screen').style.display = 'flex';
-      document.getElementById('app-screen').style.display = 'none';
+      document.getElementById('app-screen').style.display   = 'none';
       return;
     }
     document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app-screen').style.display = 'block';
-    cargarUsuarios();
+    document.getElementById('app-screen').style.display   = 'block';
+    cargarTodo();
   });
 
   document.getElementById('btn-login').addEventListener('click', () => {
-    auth.signInWithPopup(provider).catch(err => {
+    auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(err => {
       mostrarError('Error al iniciar sesión: ' + err.message);
     });
   });
-
   document.getElementById('btn-signout').addEventListener('click', () => auth.signOut());
-
   document.getElementById('buscar-usuario').addEventListener('input', function () {
     renderTabla(this.value.toLowerCase());
   });
 
-  async function cargarUsuarios() {
+  // ── CARGA ─────────────────────────────────
+  async function cargarTodo() {
     try {
-      const snap = await db.collection('users').get();
-      todosLosUsuarios = snap.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
+      const [snapUsers, snapInvites] = await Promise.all([
+        db.collection('users').get(),
+        db.collection('pending_invites').get(),
+      ]);
+      todosLosUsuarios = snapUsers.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
+      todasLasInvites  = snapInvites.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       actualizarStats();
+      renderPendientes();
+      renderInvites();
       renderTabla();
     } catch (err) {
-      mostrarError('Error al cargar usuarios: ' + err.message);
+      mostrarError('Error al cargar: ' + err.message);
     }
   }
 
+  // ── STATS ─────────────────────────────────
   function actualizarStats() {
-    const counts = { free: 0, panadero: 0, pro: 0 };
-    todosLosUsuarios.forEach(u => { counts[u.plan || 'free']++; });
+    const counts = { free: 0, panadero: 0, pro: 0, pending: 0 };
+    todosLosUsuarios.forEach(u => {
+      if (u.status === 'pending') { counts.pending++; return; }
+      counts[u.plan || 'free']++;
+    });
     document.getElementById('stat-total').textContent    = todosLosUsuarios.length;
+    document.getElementById('stat-pending').textContent  = counts.pending;
     document.getElementById('stat-free').textContent     = counts.free;
     document.getElementById('stat-panadero').textContent = counts.panadero;
     document.getElementById('stat-pro').textContent      = counts.pro;
   }
 
+  // ── PENDIENTES ────────────────────────────
+  function renderPendientes() {
+    const pendientes = todosLosUsuarios.filter(u => u.status === 'pending');
+    const seccion    = document.getElementById('seccion-pendientes');
+    seccion.style.display = pendientes.length > 0 ? 'block' : 'none';
+    if (pendientes.length === 0) return;
+
+    document.getElementById('tbody-pendientes').innerHTML = pendientes.map((u, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>
+          <div class="user-info">
+            ${u.picture
+              ? `<img src="${u.picture}" alt="${u.name || ''}" />`
+              : `<div class="user-avatar-placeholder">${(u.name || u.email || '?')[0].toUpperCase()}</div>`}
+            <div>
+              <div style="font-weight:600">${u.name || '—'}</div>
+              ${u.phone ? `<div style="font-size:.75rem;color:var(--text-muted)">${u.phone}</div>` : ''}
+            </div>
+          </div>
+        </td>
+        <td>${u.email || '—'}</td>
+        <td style="font-size:.78rem;color:var(--text-muted)">${formatDate(u.createdAt)}</td>
+        <td style="font-size:.82rem">${[u.commune, u.region, u.country].filter(Boolean).join(', ') || '—'}</td>
+        <td style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">
+          <button class="btn-approve" onclick="aprobarUsuario('${u.uid}')">✓ Aprobar</button>
+          <button class="btn-reject"  onclick="rechazarUsuario('${u.uid}')">✕ Rechazar</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function aprobarUsuario(uid) {
+    try {
+      await db.collection('users').doc(uid).update({
+        status:     'active',
+        approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        approvedBy: ADMIN_EMAIL,
+      });
+      mostrarToast('Usuario aprobado');
+      cargarTodo();
+    } catch (err) { mostrarError('Error: ' + err.message); }
+  }
+
+  async function rechazarUsuario(uid) {
+    if (!confirm('¿Rechazar este usuario? Podrá volver a intentarlo.')) return;
+    try {
+      await db.collection('users').doc(uid).update({ status: 'rejected' });
+      mostrarToast('Usuario rechazado');
+      cargarTodo();
+    } catch (err) { mostrarError('Error: ' + err.message); }
+  }
+
+  // ── INVITACIONES ──────────────────────────
+  function renderInvites() {
+    const cont = document.getElementById('invites-lista');
+    if (todasLasInvites.length === 0) {
+      cont.innerHTML = '<p style="font-size:.83rem;color:var(--text-muted);font-style:italic">No hay invitaciones pendientes.</p>';
+      return;
+    }
+    cont.innerHTML = `
+      <p style="font-size:.82rem;font-weight:700;color:var(--text-muted);margin-bottom:.5rem">INVITACIONES PENDIENTES (${todasLasInvites.length})</p>
+      <table>
+        <thead><tr><th>#</th><th>Correo</th><th>Nombre</th><th>Plan</th><th>Creado</th><th></th></tr></thead>
+        <tbody>
+          ${todasLasInvites.map((inv, i) => `
+            <tr>
+              <td>${i + 1}</td>
+              <td>${inv.email || inv.id}</td>
+              <td>${inv.nombre || '—'}</td>
+              <td><span class="plan-badge" style="background:${PLAN_COLORS[inv.plan || 'free']}">${PLAN_NOMBRES[inv.plan || 'free']}</span></td>
+              <td style="font-size:.78rem;color:var(--text-muted)">${formatDate(inv.createdAt)}</td>
+              <td><button class="btn-danger" onclick="eliminarInvite('${inv.id}')">Eliminar</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  window.crearInvite = async function() {
+    const email  = document.getElementById('pre-email').value.trim().toLowerCase();
+    const nombre = document.getElementById('pre-nombre').value.trim();
+    const plan   = document.getElementById('pre-plan').value;
+    if (!email || !email.includes('@')) { mostrarError('Ingresa un correo válido.'); return; }
+    try {
+      await db.collection('pending_invites').doc(email).set({
+        email, nombre, plan,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        createdBy: ADMIN_EMAIL,
+      });
+      document.getElementById('pre-email').value  = '';
+      document.getElementById('pre-nombre').value = '';
+      mostrarToast('Invitación creada para ' + email);
+      cargarTodo();
+    } catch (err) { mostrarError('Error: ' + err.message); }
+  };
+
+  window.eliminarInvite = async function(id) {
+    if (!confirm('¿Eliminar esta invitación?')) return;
+    try {
+      await db.collection('pending_invites').doc(id).delete();
+      mostrarToast('Invitación eliminada');
+      cargarTodo();
+    } catch (err) { mostrarError('Error: ' + err.message); }
+  };
+
+  // ── TABLA USUARIOS ────────────────────────
   function renderTabla(filtro = '') {
     const tbody = document.getElementById('tbody-usuarios');
-    const lista = filtro
-      ? todosLosUsuarios.filter(u =>
-          (u.name || '').toLowerCase().includes(filtro) ||
-          (u.email || '').toLowerCase().includes(filtro))
-      : todosLosUsuarios;
+    const lista = todosLosUsuarios
+      .filter(u => u.status !== 'pending')
+      .filter(u => {
+        if (!filtro) return true;
+        return (u.name   || '').toLowerCase().includes(filtro) ||
+               (u.email  || '').toLowerCase().includes(filtro) ||
+               (u.phone  || '').toLowerCase().includes(filtro) ||
+               (u.region || '').toLowerCase().includes(filtro) ||
+               (u.country|| '').toLowerCase().includes(filtro);
+      });
 
     if (lista.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" class="empty">No hay usuarios registrados</td></tr>';
+      tbody.innerHTML = `<tr><td colspan="9" class="empty">${filtro ? 'Sin resultados' : 'No hay usuarios registrados'}</td></tr>`;
       return;
     }
 
     tbody.innerHTML = lista.map((u, i) => {
-      const plan = u.plan || 'free';
+      const plan   = u.plan   || 'free';
+      const status = u.status || 'active';
+      const providers = (u.authProviders || []).map(p => {
+        const labels = { 'google.com': 'Google', 'microsoft.com': 'Microsoft', 'facebook.com': 'Facebook', 'password': 'Email' };
+        return `<span class="provider-badge">${labels[p] || p}</span>`;
+      }).join(' ');
+      const region = [u.region, u.country].filter(Boolean).join(', ') || '—';
+
       return `
         <tr>
           <td>${i + 1}</td>
           <td>
             <div class="user-info">
-              ${u.picture ? `<img src="${u.picture}" alt="${u.name || ''}" />` : ''}
-              <span>${u.name || '—'}</span>
+              ${u.picture
+                ? `<img src="${u.picture}" alt="${u.name || ''}" />`
+                : `<div class="user-avatar-placeholder">${(u.name || u.email || '?')[0].toUpperCase()}</div>`}
+              <span style="font-weight:600">${u.name || '—'}</span>
             </div>
           </td>
           <td>${u.email || '—'}</td>
+          <td style="font-size:.82rem">${u.phone || '—'}</td>
+          <td style="font-size:.82rem">${region}</td>
+          <td>${providers || '—'}</td>
           <td><span class="plan-badge" style="background:${PLAN_COLORS[plan]}">${PLAN_NOMBRES[plan]}</span></td>
-          <td style="display:flex;gap:.5rem;align-items:center">
+          <td><span class="status-badge status-${status}">${status === 'active' ? 'Activo' : status === 'rejected' ? 'Rechazado' : status}</span></td>
+          <td style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">
             <select class="plan-select" id="select-${u.uid}">
               <option value="free"     ${plan === 'free'     ? 'selected' : ''}>🆓 Gratis</option>
               <option value="panadero" ${plan === 'panadero' ? 'selected' : ''}>🥖 Panadero</option>
               <option value="pro"      ${plan === 'pro'      ? 'selected' : ''}>⭐ Pro</option>
             </select>
             <button class="btn-save" onclick="cambiarPlan('${u.uid}')">Guardar</button>
+            <button class="btn-detail" onclick="toggleDetalle('${u.uid}')">▼ Detalles</button>
+          </td>
+        </tr>
+        <tr class="detail-row" id="detail-${u.uid}">
+          <td colspan="9">
+            <div class="detail-grid">
+              <div class="detail-item"><label>Dirección</label><span>${u.address || '—'}</span></div>
+              <div class="detail-item"><label>Comuna</label><span>${u.commune || '—'}</span></div>
+              <div class="detail-item"><label>Región</label><span>${u.region || '—'}</span></div>
+              <div class="detail-item"><label>País</label><span>${u.country || '—'}</span></div>
+              <div class="detail-item"><label>Teléfono</label><span>${u.phone || '—'}</span></div>
+              <div class="detail-item"><label>Registrado</label><span>${formatDate(u.createdAt)}</span></div>
+              <div class="detail-item"><label>Aprobado</label><span>${formatDate(u.approvedAt)}</span></div>
+              <div class="detail-item"><label>Plan desde</label><span>${formatDate(u.planSince)}</span></div>
+              <div class="detail-item"><label>UID</label><span style="font-size:.72rem;word-break:break-all">${u.uid}</span></div>
+              <div class="detail-item"><label>Recetas</label><span>${(u.recetas || []).length}</span></div>
+              <div class="detail-item"><label>Ingredientes</label><span>${(u.ingredientes || []).length}</span></div>
+            </div>
           </td>
         </tr>
       `;
     }).join('');
   }
 
+  window.toggleDetalle = function(uid) {
+    const row = document.getElementById('detail-' + uid);
+    if (row) row.classList.toggle('open');
+  };
+
   async function cambiarPlan(uid) {
-    const nuevoPlan = document.getElementById(`select-${uid}`).value;
+    const nuevoPlan = document.getElementById('select-' + uid).value;
     try {
       await db.collection('users').doc(uid).update({ plan: nuevoPlan });
       const idx = todosLosUsuarios.findIndex(u => u.uid === uid);
       if (idx !== -1) todosLosUsuarios[idx].plan = nuevoPlan;
       actualizarStats();
       renderTabla(document.getElementById('buscar-usuario').value.toLowerCase());
-      mostrarToast();
-    } catch (err) {
-      mostrarError('Error al actualizar plan: ' + err.message);
-    }
+      mostrarToast('Plan actualizado');
+    } catch (err) { mostrarError('Error: ' + err.message); }
   }
 
-  function mostrarToast() {
-    const toast = document.getElementById('toast');
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 2500);
+  // ── HELPERS ───────────────────────────────
+  function formatDate(ts) {
+    if (!ts) return '—';
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return d.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: '2-digit' });
+  }
+
+  function mostrarToast(msg = '✓ Acción completada') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
   }
 
   function mostrarError(msg) {
     const el = document.getElementById('error-box');
     el.textContent = msg;
     el.style.display = 'block';
-    setTimeout(() => el.style.display = 'none', 5000);
+    setTimeout(() => el.style.display = 'none', 6000);
   }
 </script>
 </body>

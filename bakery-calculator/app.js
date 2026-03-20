@@ -58,50 +58,232 @@ function mostrarModalUpgrade(motivo) {
 // ── AUTH ────────────────────────────────────
 const auth = firebase.auth();
 const db   = firebase.firestore();
-const googleProvider = new firebase.auth.GoogleAuthProvider();
+const googleProvider    = new firebase.auth.GoogleAuthProvider();
+const microsoftProvider = new firebase.auth.OAuthProvider('microsoft.com');
+const facebookProvider  = new firebase.auth.FacebookAuthProvider();
 
 let currentUser = null;
 
-auth.onAuthStateChanged(user => {
-  if (user) {
-    currentUser = {
-      id:      user.uid,
-      name:    user.displayName,
-      email:   user.email,
-      picture: user.photoURL,
-    };
-    document.getElementById('login-overlay').classList.add('hidden');
-    document.getElementById('auth-section').classList.remove('hidden');
-    document.getElementById('user-name').textContent = currentUser.name;
-    document.getElementById('user-avatar').src       = currentUser.picture;
-    document.getElementById('user-avatar').alt       = currentUser.name;
+// ── OVERLAY CONTROL ─────────────────────────
+function hideAllOverlays() {
+  ['login-overlay', 'profile-overlay', 'pending-overlay'].forEach(id => {
+    document.getElementById(id).classList.add('hidden');
+  });
+  document.getElementById('auth-section').classList.add('hidden');
+}
 
-    Object.assign(state, { ingredientes: [], recetas: [], nextIngId: 1, nextRecId: 1 });
-    loadState().then(() => {
-      actualizarPlanBadge();
-      cargarDemoData();
-      renderTablaIngredientes();
-      renderRecetas();
-    });
+function mostrarErrorLogin(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+
+function showApp(data) {
+  hideAllOverlays();
+  currentPlan = data.plan || 'free';
+  Object.assign(state, { ingredientes: [], recetas: [], nextIngId: 1, nextRecId: 1 });
+  if (data.ingredientes) state.ingredientes = data.ingredientes;
+  if (data.recetas)      state.recetas      = data.recetas;
+  if (data.nextIngId)    state.nextIngId    = data.nextIngId;
+  if (data.nextRecId)    state.nextRecId    = data.nextRecId;
+
+  document.getElementById('auth-section').classList.remove('hidden');
+  document.getElementById('user-name').textContent = currentUser.name || currentUser.email;
+  const avatarEl = document.getElementById('user-avatar');
+  if (currentUser.picture) {
+    avatarEl.src = currentUser.picture;
   } else {
+    const ini = (currentUser.name || currentUser.email || '?')[0].toUpperCase();
+    avatarEl.src = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='36' height='36'><rect width='36' height='36' rx='18' fill='%23c0392b'/><text x='18' y='25' font-size='18' text-anchor='middle' fill='white' font-family='sans-serif'>${ini}</text></svg>`;
+  }
+  avatarEl.alt = currentUser.name || '';
+  actualizarPlanBadge();
+  cargarDemoData();
+  renderTablaIngredientes();
+  renderRecetas();
+}
+
+// ── AUTH STATE ──────────────────────────────
+auth.onAuthStateChanged(async user => {
+  if (!user) {
     currentUser = null;
     state.ingredientes = [];
-    state.recetas = [];
-    document.getElementById('auth-section').classList.add('hidden');
+    state.recetas      = [];
+    hideAllOverlays();
+    document.getElementById('login-overlay').classList.remove('hidden');
+    document.getElementById('login-error').classList.add('hidden');
+    return;
+  }
+
+  currentUser = {
+    id:        user.uid,
+    name:      user.displayName || '',
+    email:     user.email || '',
+    picture:   user.photoURL || '',
+    providers: user.providerData.map(p => p.providerId),
+  };
+
+  try {
+    const docRef = db.collection('users').doc(user.uid);
+    const doc    = await docRef.get();
+
+    if (!doc.exists) {
+      // Nuevo usuario → mostrar formulario de perfil
+      hideAllOverlays();
+      document.getElementById('perfil-nombre').value = currentUser.name;
+      document.getElementById('perfil-correo').value = currentUser.email;
+      document.getElementById('profile-overlay').classList.remove('hidden');
+      return;
+    }
+
+    const data = doc.data();
+
+    // Parchar campos faltantes (compatibilidad con docs que perdieron nombre/email)
+    const patch = { authProviders: currentUser.providers };
+    if (!data.name    && currentUser.name)    patch.name    = currentUser.name;
+    if (!data.email   && currentUser.email)   patch.email   = currentUser.email;
+    if (!data.picture && currentUser.picture) patch.picture = currentUser.picture;
+    docRef.update(patch).catch(() => {});
+
+    if (data.status === 'pending') {
+      hideAllOverlays();
+      document.getElementById('pending-overlay').classList.remove('hidden');
+      return;
+    }
+
+    // status === 'active' o sin status (compatibilidad)
+    showApp(data);
+  } catch (err) {
+    console.error('Error en auth state:', err);
+    hideAllOverlays();
     document.getElementById('login-overlay').classList.remove('hidden');
   }
 });
 
-document.getElementById('google-signin-btn').addEventListener('click', () => {
-  auth.signInWithPopup(googleProvider).catch(err => {
-    console.error('Error al iniciar sesión:', err);
-    alert('Error al iniciar sesión. Intenta nuevamente.');
+// ── SIGN-IN HANDLERS ────────────────────────
+function signInWithProvider(provider) {
+  document.getElementById('login-error').classList.add('hidden');
+  auth.signInWithPopup(provider).catch(err => {
+    if (err.code === 'auth/popup-closed-by-user' ||
+        err.code === 'auth/cancelled-popup-request') return;
+    if (err.code === 'auth/account-exists-with-different-credential') {
+      mostrarErrorLogin('Este correo está registrado con otro método de inicio de sesión.');
+      return;
+    }
+    mostrarErrorLogin('Error: ' + err.message);
   });
+}
+
+document.getElementById('btn-google').addEventListener('click',    () => signInWithProvider(googleProvider));
+document.getElementById('btn-microsoft').addEventListener('click', () => signInWithProvider(microsoftProvider));
+document.getElementById('btn-facebook').addEventListener('click',  () => signInWithProvider(facebookProvider));
+
+// Email/contraseña
+let emailMode = 'signin';
+document.getElementById('btn-toggle-mode').addEventListener('click', () => {
+  emailMode = emailMode === 'signin' ? 'register' : 'signin';
+  const reg = emailMode === 'register';
+  document.getElementById('btn-email-submit').textContent  = reg ? 'Crear cuenta' : 'Iniciar sesión';
+  document.getElementById('login-toggle-text').textContent = reg ? '¿Ya tienes cuenta?' : '¿No tienes cuenta?';
+  document.getElementById('btn-toggle-mode').textContent   = reg ? 'Iniciar sesión' : 'Registrarte';
+  document.getElementById('login-confirm-wrap').classList.toggle('hidden', !reg);
+  document.getElementById('login-error').classList.add('hidden');
 });
 
-document.getElementById('btn-signout').addEventListener('click', () => {
-  auth.signOut();
+document.getElementById('btn-email-submit').addEventListener('click', async () => {
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  document.getElementById('login-error').classList.add('hidden');
+  if (!email || !password) { mostrarErrorLogin('Ingresa correo y contraseña.'); return; }
+  try {
+    if (emailMode === 'signin') {
+      await auth.signInWithEmailAndPassword(email, password);
+    } else {
+      const confirm = document.getElementById('login-confirm').value;
+      if (password !== confirm) { mostrarErrorLogin('Las contraseñas no coinciden.'); return; }
+      if (password.length < 6)  { mostrarErrorLogin('La contraseña debe tener al menos 6 caracteres.'); return; }
+      await auth.createUserWithEmailAndPassword(email, password);
+    }
+  } catch (err) {
+    const msgs = {
+      'auth/wrong-password':           'Contraseña incorrecta.',
+      'auth/user-not-found':           'No existe cuenta con este correo.',
+      'auth/email-already-in-use':     'Este correo ya está registrado.',
+      'auth/weak-password':            'La contraseña debe tener al menos 6 caracteres.',
+      'auth/invalid-email':            'Correo electrónico inválido.',
+      'auth/too-many-requests':        'Demasiados intentos. Intenta más tarde.',
+      'auth/invalid-credential':       'Correo o contraseña incorrectos.',
+    };
+    mostrarErrorLogin(msgs[err.code] || err.message);
+  }
 });
+
+// ── PROFILE FORM ────────────────────────────
+document.getElementById('form-perfil').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn       = e.target.querySelector('button[type="submit"]');
+  const nombre    = document.getElementById('perfil-nombre').value.trim();
+  const telefono  = document.getElementById('perfil-telefono').value.trim();
+  const direccion = document.getElementById('perfil-direccion').value.trim();
+  const comuna    = document.getElementById('perfil-comuna').value.trim();
+  const region    = document.getElementById('perfil-region').value;
+  const pais      = document.getElementById('perfil-pais').value.trim() || 'Chile';
+  if (!nombre) { alert('El nombre es requerido.'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+  try {
+    if (auth.currentUser && auth.currentUser.displayName !== nombre) {
+      await auth.currentUser.updateProfile({ displayName: nombre });
+      currentUser.name = nombre;
+    }
+
+    // Verificar invitación previa del administrador
+    const emailKey  = currentUser.email.toLowerCase();
+    const inviteRef = db.collection('pending_invites').doc(emailKey);
+    const inviteDoc = await inviteRef.get();
+    let plan   = 'free';
+    let status = 'pending';
+    if (inviteDoc.exists) {
+      plan   = inviteDoc.data().plan || 'free';
+      status = 'active';
+      await inviteRef.delete();
+    }
+
+    await db.collection('users').doc(currentUser.id).set({
+      name:          nombre,
+      email:         currentUser.email,
+      picture:       currentUser.picture,
+      authProviders: currentUser.providers,
+      phone:         telefono,
+      address:       direccion,
+      commune:       comuna,
+      region,
+      country:       pais,
+      plan,
+      status,
+      planSince: firebase.firestore.FieldValue.serverTimestamp(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      ingredientes: [], recetas: [], nextIngId: 1, nextRecId: 1,
+    });
+
+    if (status === 'active') {
+      showApp({ plan, ingredientes: [], recetas: [], nextIngId: 1, nextRecId: 1 });
+    } else {
+      hideAllOverlays();
+      document.getElementById('pending-overlay').classList.remove('hidden');
+    }
+  } catch (err) {
+    console.error('Error al guardar perfil:', err);
+    alert('Error: ' + err.message);
+    btn.disabled = false;
+    btn.textContent = 'Guardar y continuar →';
+  }
+});
+
+// ── SIGN OUT ────────────────────────────────
+document.getElementById('btn-signout').addEventListener('click',         () => auth.signOut());
+document.getElementById('btn-signout-pending').addEventListener('click', () => auth.signOut());
 
 // ── STATE ──────────────────────────────────
 const state = {
@@ -119,36 +301,9 @@ function saveState() {
     recetas:      state.recetas,
     nextIngId:    state.nextIngId,
     nextRecId:    state.nextRecId,
-  }).catch(err => console.error('Error al guardar:', err));
+  }, { merge: true }).catch(err => console.error('Error al guardar:', err));
 }
 
-async function loadState() {
-  if (!currentUser) return;
-  try {
-    const doc = await db.collection('users').doc(currentUser.id).get();
-    if (doc.exists) {
-      const data = doc.data();
-      if (data.ingredientes) state.ingredientes = data.ingredientes;
-      if (data.recetas)      state.recetas      = data.recetas;
-      if (data.nextIngId)    state.nextIngId    = data.nextIngId;
-      if (data.nextRecId)    state.nextRecId    = data.nextRecId;
-      currentPlan = data.plan || 'free';
-    } else {
-      // Nuevo usuario: crear documento con plan gratis
-      await db.collection('users').doc(currentUser.id).set({
-        name:      currentUser.name,
-        email:     currentUser.email,
-        picture:   currentUser.picture,
-        plan:      'free',
-        planSince: firebase.firestore.FieldValue.serverTimestamp(),
-        ingredientes: [], recetas: [], nextIngId: 1, nextRecId: 1,
-      });
-      currentPlan = 'free';
-    }
-  } catch (err) {
-    console.error('Error al cargar:', err);
-  }
-}
 
 // ── HELPERS ────────────────────────────────
 function fmt(n) {
